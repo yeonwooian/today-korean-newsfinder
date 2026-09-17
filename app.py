@@ -11,6 +11,7 @@ app.py
 
 from __future__ import annotations
 
+import base64
 import os
 import sys
 from datetime import datetime
@@ -52,12 +53,20 @@ st.markdown(
         padding-right: 0.9rem !important;
         max-width: 540px !important;
     }
-    /* 타이틀 영역 스타일링 */
+    /* 타이틀 및 헤더 우측 로고 영역 스타일링 */
     .top-title-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-top: 0.2rem;
         margin-bottom: 1.2rem;
         padding-bottom: 0.8rem;
         border-bottom: 1.5px solid #edf2f7;
+        gap: 12px;
+    }
+    .top-title-text {
+        flex: 1;
+        min-width: 0;
     }
     .app-main-title {
         font-size: 1.35rem !important;
@@ -65,13 +74,41 @@ st.markdown(
         color: #1a202c !important;
         letter-spacing: -0.3px;
         line-height: 1.35;
+        word-break: keep-all;
     }
     .app-sub-title {
-        font-size: 0.80rem !important;
+        font-size: 0.82rem !important;
         color: #718096 !important;
         font-weight: 600;
         margin-top: 3px;
         letter-spacing: 0.2px;
+    }
+    .top-title-logo {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-shrink: 0;
+    }
+    .top-title-logo img {
+        height: 44px;
+        width: auto;
+        max-width: 135px;
+        object-fit: contain;
+    }
+    @media (max-width: 440px) {
+        .top-title-container {
+            gap: 8px;
+        }
+        .app-main-title {
+            font-size: 1.18rem !important;
+        }
+        .app-sub-title {
+            font-size: 0.76rem !important;
+        }
+        .top-title-logo img {
+            height: 34px;
+            max-width: 100px;
+        }
     }
     .section-title {
         font-size: 1.18rem !important;
@@ -148,20 +185,45 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+@st.cache_data
+def get_logo_html() -> str:
+    """헤더 우측에 표시할 오늘도국어 로고(background/logo_black.png) base64 HTML 반환"""
+    logo_path = BASE_DIR / "background" / "logo_black.png"
+    if logo_path.exists():
+        try:
+            b64 = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
+            return f'<img src="data:image/png;base64,{b64}" alt="오늘도국어 학원 로고" />'
+        except Exception:
+            return ""
+    return ""
+
+
+def render_top_header():
+    """모바일 최적화 상단 브랜드 헤더 (타이틀 + 우측 로고) 컴포넌트"""
+    logo_img = get_logo_html()
+    st.markdown(
+        f"""
+        <div class="top-title-container">
+            <div class="top-title-text">
+                <div class="app-main-title">뉴스파인더 by 오늘도국어 학원.</div>
+                <div class="app-sub-title">produced by 4J_System.</div>
+            </div>
+            <div class="top-title-logo">
+                {logo_img}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 # 3. 로그인 세션 관리 (솔트 해시 기반 보안 인증)
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.markdown(
-        """
-        <div class="top-title-container">
-            <div class="app-main-title">뉴스파인더 by 오늘도국어 학원.</div>
-            <div class="app-sub-title">produced by 4J_System.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    render_top_header()
     st.markdown("### 🔒 오늘도국어 관리자 인증")
     st.caption("안전한 시스템 관리를 위해 암호를 입력해 주세요.")
 
@@ -193,15 +255,7 @@ if "search_date" not in st.session_state:
 # ==========================================
 gen_data = st.session_state.current_generation
 if gen_data is not None:
-    st.markdown(
-        """
-        <div class="top-title-container">
-            <div class="app-main-title">뉴스파인더 by 오늘도국어 학원.</div>
-            <div class="app-sub-title">produced by 4J_System.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    render_top_header()
     # 1. 상단 복귀 버튼
     if st.button("↩ 기사모음으로 복귀", key="btn_return_top", use_container_width=True):
         st.session_state.current_generation = None
@@ -257,12 +311,9 @@ if gen_data is not None:
 # ==========================================
 # 화면 B: 메인 수집된 네이버 기사모음 화면
 # ==========================================
+render_top_header()
 st.markdown(
     """
-    <div class="top-title-container">
-        <div class="app-main-title">뉴스파인더 by 오늘도국어 학원.</div>
-        <div class="app-sub-title">produced by 4J_System.</div>
-    </div>
     <div class="section-title">📰 수집된 네이버 기사모음</div>
     <div class="section-desc">100% 네이버 뉴스(n.news.naver.com) 기준 D-1 교육 트렌드</div>
     """,
