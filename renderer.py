@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 import re
 import random
 import pathlib
@@ -9,8 +11,6 @@ import base64
 try:
     from playwright.sync_api import sync_playwright
 except ModuleNotFoundError:
-    import subprocess
-    import sys
     print("[*] 클라우드 환경 Playwright 라이브러리 자동 설치 중...")
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "playwright>=1.40.0"], check=True)
