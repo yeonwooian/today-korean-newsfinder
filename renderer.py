@@ -5,7 +5,21 @@ import pathlib
 from typing import Dict, Any, List, Optional
 from jinja2 import Environment, FileSystemLoader
 import base64
-from playwright.sync_api import sync_playwright
+
+try:
+    from playwright.sync_api import sync_playwright
+except ModuleNotFoundError:
+    import subprocess
+    import sys
+    print("[*] 클라우드 환경 Playwright 라이브러리 자동 설치 중...")
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "playwright>=1.40.0"], check=True)
+        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=True)
+        from playwright.sync_api import sync_playwright
+    except Exception as ie:
+        raise ModuleNotFoundError(
+            f"Playwright 설치 실패: {ie}. GitHub requirements.txt에 'playwright>=1.40.0'이 포함되어 있는지 확인해주세요."
+        )
 
 def get_image_data_uri(file_path: pathlib.Path) -> str:
     """로컬 이미지 파일을 Playwright가 안전하게 렌더링할 수 있도록 base64 data URI로 변환"""

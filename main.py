@@ -13,7 +13,6 @@ if sys.platform == "win32":
 
 from scraper import scrape_naver_news
 from ai_planner import plan_cardnews_and_caption
-from renderer import render_cardnews
 from telegram_sender import send_cardnews_report
 
 
@@ -84,6 +83,7 @@ def run_pipeline(
     if progress_callback:
         progress_callback("Playwright 1080×1350 고해상도 이미지 렌더링 중...", 80)
     print(f"\n[3단계] Playwright 고해상도(1080×1350) 이미지 렌더링 중...")
+    from renderer import render_cardnews
     images = render_cardnews(plan_result, output_dir=output_dir)
 
     # 4. 인스타그램 피드 캡션 파일 저장
