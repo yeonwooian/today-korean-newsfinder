@@ -42,38 +42,67 @@ def normalize_to_n_news_url(url: str) -> str | None:
     return None
 
 
+def normalize_title(title: str) -> str:
+    """
+    제목 중복 검사를 위한 텍스트 정규화.
+    [단독], [포토], (종합) 등 언론사 태그 및 공백/특수문자를 제거하여 동일 기사 판별.
+    """
+    if not title:
+        return ""
+    # 괄호 태그 제거 ([단독], (속보), <포토> 등)
+    t = re.sub(r"\[.*?\]|\(.*?\)|<.*?>", "", title)
+    # 특수문자 제거 및 소문자화, 연속 공백 압축
+    t = re.sub(r"[^\w\s]", "", t)
+    return re.sub(r"\s+", "", t).lower()
+
+
 def collect_news_by_category(
     category_id: str,
     target_date: datetime | None = None,
-    max_per_category: int = 5,
+    max_per_category: int = 8,
+    seen_urls: set[str] | None = None,
+    seen_titles: set[str] | None = None,
 ) -> list[dict]:
     """
-    특정 카테고리(A, B, C, D)의 네이버 뉴스 기사들을 수집하고 중복을 제거합니다.
-    반드시 https://n.news.naver.com/... URL만 선별합니다.
+    특정 카테고리(A, B, C, D)의 네이버 뉴스 기사들을 수집하고 URL 및 제목 중복을 엄격히 제거합니다.
     """
+    if seen_urls is None:
+        seen_urls = set()
+    if seen_titles is None:
+        seen_titles = set()
+
     cat_info = NEWS_CATEGORIES.get(category_id)
     if not cat_info:
         return []
 
     keywords = cat_info["keywords"]
     collected = []
-    seen_urls = set()
 
-    # 상위 3개 핵심 키워드로 네이버 뉴스 검색 수행
-    queries_to_run = keywords[:3]
+    # 키워드 순회 검색 (목표 건수를 채울 때까지 순차 진행)
+    for q in keywords:
+        if len(collected) >= max_per_category:
+            break
 
-    for q in queries_to_run:
-        results = search_naver_news_only(q, target_date=target_date, max_results=5)
+        results = search_naver_news_only(q, target_date=target_date, max_results=8)
 
         for item in results:
+            if len(collected) >= max_per_category:
+                break
+
+            # 1. URL 정규화 및 URL 중복 검사
             raw_url = item.get("link", "")
             std_url = normalize_to_n_news_url(raw_url)
-            if not std_url:
+            if not std_url or std_url in seen_urls:
                 continue
 
-            if std_url in seen_urls:
+            # 2. 기사 제목 정규화 및 제목 중복 검사 (유사 송고 기사 차단)
+            raw_title = item.get("title", "")
+            norm_title = normalize_title(raw_title)
+            if not norm_title or norm_title in seen_titles:
                 continue
+
             seen_urls.add(std_url)
+            seen_titles.add(norm_title)
 
             item["link"] = std_url
             item["naver_link"] = std_url
@@ -86,12 +115,12 @@ def collect_news_by_category(
 
 def collect_all_categories(
     target_date: datetime | None = None,
-    max_per_category: int = 4,
+    max_per_category: int = 8,
     fetch_full_text: bool = True,
 ) -> dict[str, list[dict]]:
     """
-    4대 카테고리(A, B, C, D) 전체에서 네이버 뉴스만을 수집하고,
-    기사 상세 메타데이터 및 발췌 본문을 병렬 추출합니다.
+    4대 카테고리(A, B, C, D) 전체에서 최대 8건씩 네이버 뉴스를 수집합니다.
+    카테고리 간 교차 중복(동일 기사가 여러 카테고리에 동시 등장)을 전역 세트로 100% 방지합니다.
     """
     if target_date is None:
         target_date = get_default_target_date()
@@ -99,10 +128,18 @@ def collect_all_categories(
     target_date_str = target_date.strftime("%Y.%m.%d")
     all_results: dict[str, list[dict]] = {}
 
-    # 1. 4대 카테고리 순회 수집
+    # 전역 중복 방지 세트 (카테고리 간 중복 기사 원천 차단)
+    global_seen_urls: set[str] = set()
+    global_seen_titles: set[str] = set()
+
+    # 1. 4대 카테고리 순회 수집 (전역 세트 공유)
     for cat_id in ["A", "B", "C", "D"]:
         cat_news = collect_news_by_category(
-            cat_id, target_date=target_date, max_per_category=max_per_category
+            cat_id,
+            target_date=target_date,
+            max_per_category=max_per_category,
+            seen_urls=global_seen_urls,
+            seen_titles=global_seen_titles,
         )
         all_results[cat_id] = cat_news
 

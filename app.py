@@ -289,7 +289,7 @@ if st.session_state.collected_news is None:
         try:
             collected = collect_all_categories(
                 target_date=datetime.combine(target_date, datetime.min.time()),
-                max_per_category=4,
+                max_per_category=8,
                 fetch_full_text=True,
             )
             st.session_state.collected_news = collected

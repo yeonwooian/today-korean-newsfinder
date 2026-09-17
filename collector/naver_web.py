@@ -38,7 +38,7 @@ MOBILE_HEADERS = {
 def search_naver_news_only(
     query: str,
     target_date: datetime | None = None,
-    max_results: int = 5,
+    max_results: int = 8,
 ) -> list[dict]:
     """
     네이버 검색에서 '네이버뉴스' 인링크(n.news.naver.com)가 제공되는 기사만 선별 수집합니다.
@@ -77,7 +77,7 @@ def search_naver_news_only(
 
 
 def _fetch_from_url(url: str, is_mobile: bool = False) -> list[dict]:
-    """주어진 네이버 검색 URL에서 네이버뉴스 인링크 기사들을 파싱합니다."""
+    """주어진 네이버 검색 URL에서 네이버뉴스 인링크 기사들을 정밀 파싱합니다."""
     headers = MOBILE_HEADERS if is_mobile else PC_HEADERS
     try:
         resp = requests.get(url, headers=headers, timeout=8)
@@ -91,69 +91,65 @@ def _fetch_from_url(url: str, is_mobile: bool = False) -> list[dict]:
     results = []
     seen_articles = set()
 
-    # 기사 컨테이너 탐색
-    cards = soup.select(".news_wrap, div.news_area, li.bx, div[class*='news_']")
-    for card in cards:
-        # 네이버 뉴스 인링크 확인
-        naver_a = card.select_one(
-            "a[href*='news.naver.com/mnews/article'], a[href*='n.news.naver.com/mnews/article']"
-        )
-        if not naver_a:
+    # 모든 네이버뉴스 인링크 앵커 탐색 (/article/ 및 /mnews/article/ 모두 지원)
+    for a in soup.find_all("a"):
+        href = a.get("href", "")
+        if "news.naver.com" not in href or "/article/" not in href:
             continue
 
-        naver_url = naver_a.get("href", "")
-        base_url = naver_url.split("?")[0]
+        base_url = href.split("?")[0]
         if base_url in seen_articles:
             continue
 
-        # 제목
-        title_el = card.select_one(".news_tit, a.news_tit, a[title], [class*='tit']")
-        title = title_el.get_text(strip=True) if title_el else ""
+        # 1. 기사 제목 추출
+        title = ""
+        # 앵커 자체 텍스트 확인 (모바일 검색에서는 앵커 텍스트가 기사 제목)
+        txt = a.get_text(strip=True)
+        if len(txt) > 8 and "새 창 열림" not in txt and "네이버뉴스" not in txt and "Keep" not in txt:
+            title = txt
+        else:
+            # PC 검색 등 상위 카드 컨테이너에서 제목 탐색
+            card = a.find_parent(["li", "div", "article"])
+            if card:
+                tit_el = card.select_one(".news_tit, a.news_tit, a[class*='tit'], [class*='headline'], strong, h2, h3")
+                if tit_el and len(tit_el.get_text(strip=True)) > 8:
+                    title = tit_el.get_text(strip=True)
+
+        if not title:
+            continue
 
         # 상업적 광고 키워드 필터링
         if any(bad in title for bad in EXCLUDE_TITLE_KEYWORDS):
             continue
 
-        # 언론사
-        press_el = card.select_one("a.press, .info_group a, [class*='press'], .source")
-        press = press_el.get_text(strip=True) if press_el else ""
+        # 2. 언론사 추출
+        press = ""
+        card = a.find_parent(["li", "div", "article"])
+        if card:
+            press_el = card.select_one(
+                "a[href*='media.naver.com/press'], a.press, .info_group a, [class*='press'], .source, [class*='source']"
+            )
+            if press_el:
+                press = press_el.get_text(strip=True)
 
-        # 날짜
-        date_el = card.select_one(".info_group span.info, span.date, .time")
-        date_text = date_el.get_text(strip=True) if date_el else ""
-
-        # 본문 요약
-        desc_el = card.select_one(".news_dsc, [class*='dsc'], .text")
-        desc = desc_el.get_text(strip=True) if desc_el else ""
+        # 3. 날짜 텍스트 추출
+        date_text = ""
+        if card:
+            date_el = card.select_one(".info_group span.info, span.date, .time, [class*='date']")
+            if date_el:
+                date_text = date_el.get_text(strip=True)
 
         seen_articles.add(base_url)
-        is_preferred = any(p in press for p in PREFERRED_PRESS)
+        is_preferred = any(p in press for p in PREFERRED_PRESS) if press else False
 
         results.append({
             "title": title,
-            "link": naver_url,
-            "naver_link": naver_url,
-            "source": press or "언론사",
-            "description": desc,
+            "link": base_url,
+            "naver_link": base_url,
+            "source": press or "네이버뉴스",
+            "description": "",
             "date_text": date_text,
             "is_preferred": is_preferred,
         })
-
-    # 카드 셀렉터 외 전체 링크에서 직접 네이버뉴스 링크 보완
-    if not results:
-        for a in soup.select("a[href*='n.news.naver.com/mnews/article'], a[href*='news.naver.com/mnews/article']"):
-            href = a.get("href", "")
-            base = href.split("?")[0]
-            if base not in seen_articles:
-                seen_articles.add(base)
-                results.append({
-                    "title": a.get_text(strip=True) or "",
-                    "link": href,
-                    "naver_link": href,
-                    "source": "네이버뉴스",
-                    "description": "",
-                    "date_text": "",
-                    "is_preferred": False,
-                })
 
     return results
