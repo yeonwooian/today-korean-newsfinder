@@ -32,7 +32,6 @@ def normalize_to_n_news_url(url: str) -> str | None:
         oid, aid = match.group(1), match.group(2)
         return f"https://n.news.naver.com/mnews/article/{oid}/{aid}"
 
-    # 정규식 패턴과 살짝 다른 경우에도 news.naver.com/mnews/article 형식이면 유지
     if "news.naver.com" in url and "/article/" in url:
         clean_url = url.split("?")[0]
         if "n.news.naver.com" not in clean_url:
@@ -68,7 +67,6 @@ def collect_news_by_category(
 
         for item in results:
             raw_url = item.get("link", "")
-            # 네이버 뉴스 표준 URL로 정규화
             std_url = normalize_to_n_news_url(raw_url)
             if not std_url:
                 continue
@@ -93,7 +91,7 @@ def collect_all_categories(
 ) -> dict[str, list[dict]]:
     """
     4대 카테고리(A, B, C, D) 전체에서 네이버 뉴스만을 수집하고,
-    네이버 뉴스 본문 페이지에서 제목, 언론사, 발행일, 본문 텍스트를 정밀 추출합니다.
+    기사 상세 메타데이터 및 발췌 본문을 병렬 추출합니다.
     """
     if target_date is None:
         target_date = get_default_target_date()
@@ -101,14 +99,14 @@ def collect_all_categories(
     target_date_str = target_date.strftime("%Y.%m.%d")
     all_results: dict[str, list[dict]] = {}
 
-    # 1. 4대 카테고리 순회 수집 (네이버 뉴스 전용)
+    # 1. 4대 카테고리 순회 수집
     for cat_id in ["A", "B", "C", "D"]:
         cat_news = collect_news_by_category(
             cat_id, target_date=target_date, max_per_category=max_per_category
         )
         all_results[cat_id] = cat_news
 
-    # 2. 네이버 뉴스 기사 페이지에서 상세 메타데이터 및 본문 병렬 추출
+    # 2. 기사 페이지에서 상세 메타데이터 및 본문 병렬 추출
     if fetch_full_text:
         articles_to_fetch = []
         for cat_id, items in all_results.items():
@@ -141,7 +139,6 @@ def collect_all_categories(
     # 3. D-1 날짜 일치 여부 및 신뢰 언론사 우선 정렬
     for cat_id in all_results:
         items = all_results[cat_id]
-        # 엄격 검증: n.news.naver.com이 아닌 기사는 완전 탈락
         valid_items = [it for it in items if it.get("link", "").startswith("https://n.news.naver.com")]
         for item in valid_items:
             pdate = item.get("published_date", "")

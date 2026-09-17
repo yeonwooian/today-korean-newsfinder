@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    color: #FFFFFF;
+    word-break: keep-all;
+    background: #0B132B;
+  }
+
+  /* 배경 이미지 + 아주 옅은 매거진 전용 비네트 그라데이션 (배경 하단 가시성 확보) */
+  .bg-layer {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(180deg, 
+        rgba(11, 19, 43, 0.40) 0%, 
+        rgba(11, 19, 43, 0.15) 30%, 
+        rgba(11, 19, 43, 0.10) 65%, 
+        rgba(11, 19, 43, 0.25) 100%),
+      url('{{ bg_image_path }}');
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+  }
+
+  /* 우측 상단 오늘도국어학원 로고 (고정 위치 65px, 70px) */
+  .header-logo {
+    position: absolute;
+    top: 65px;
+    right: 70px;
+    width: 200px;
+    z-index: 10;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+  }
+
+  /* 상단 매거진 메타데이터 바 (NewScientist 탑 스트립 스타일) */
+  .top-meta-bar {
+    position: absolute;
+    top: 68px;
+    left: 70px;
+    right: 290px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.28);
+  }
+  .meta-tag {
+    font-family: 'Montserrat', 'Pretendard', sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #FFC72C;
+    background: rgba(255, 199, 44, 0.15);
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .meta-text {
+    font-family: 'Montserrat', 'Pretendard', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #CBD5E1;
+  }
+
+  /* 1080x1080 안전영역 캔버스 */
+  .safe-canvas {
+    position: absolute;
+    top: 135px;
+    left: 0;
+    width: 1080px;
+    height: 1080px;
+    padding: 25px 70px 45px 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 5;
+  }
+
+  /* 메인 헤드라인 섹션 (NewScientist 타이포그래피 계층) */
+  .headline-section {
+    margin-top: 10px;
+  }
+  .cover-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #00A3FF;
+    letter-spacing: -0.2px;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  }
+  .cover-kicker .kicker-dot {
+    width: 9px;
+    height: 9px;
+    background: #00A3FF;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00A3FF;
+  }
+  
+  .main-title {
+    font-size: 68px;
+    font-weight: 900;
+    line-height: 1.18;
+    letter-spacing: -2px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+  }
+  .title-white {
+    color: #FFFFFF;
+    display: block;
+  }
+  .title-highlight {
+    color: #FFC72C;
+    display: block;
+    font-size: 76px;
+    text-shadow: 0 4px 25px rgba(255, 199, 44, 0.45);
+    margin: 4px 0;
+  }
+
+  .deck-text {
+    margin-top: 20px;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.38;
+    color: #E2E8F0;
+    border-left: 4px solid #FFC72C;
+    padding-left: 18px;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+    max-width: 900px;
+  }
+
+  /* 에디토리얼 스토리 스택 (2분할 박스 - 글자크기 확대) */
+  .story-stack {
+    display: flex;
+    gap: 20px;
+    margin-top: 24px;
+  }
+  .story-card {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.76);
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(16px);
+    border-radius: 18px;
+    padding: 22px 26px;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.38);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .story-card.featured {
+    border-color: rgba(255, 199, 44, 0.65);
+    background: rgba(15, 23, 42, 0.85);
+  }
+  .story-kicker {
+    font-family: 'Montserrat', 'Pretendard', sans-serif;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #FFC72C;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
+  .story-kicker.cyan { color: #00A3FF; }
+  .story-heading {
+    font-size: 28px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .story-body {
+    font-size: 22px;
+    font-weight: 500;
+    color: #CBD5E1;
+    line-height: 1.36;
+  }
+
+  /* 하단 매거진 바 & 바코드 푸터 */
+  .magazine-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    padding-top: 20px;
+    margin-top: 15px;
+  }
+  .brand-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .brand-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #CBD5E1;
+  }
+  .brand-korean {
+    color: #C74417;
+    font-weight: 800;
+  }
+  .meta-sub-info {
+    font-family: 'Montserrat', 'Pretendard', sans-serif;
+    font-size: 14px;
+    color: #64748B;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  }
+  .swipe-cta {
+    font-size: 28px;
+    font-weight: 800;
+    color: #00A3FF;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 0 16px rgba(0, 163, 255, 0.4);
+  }
+
+  /* 실제 매거진 정품 바코드 SVG */
+  .barcode-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #FFFFFF;
+    padding: 6px 12px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  .barcode-svg {
+    width: 100px;
+    height: 32px;
+  }
+  .barcode-digits {
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+  <div class="bg-layer"></div>
+
+  <!-- 우측 상단 오늘도국어학원 로고 (고정 위치) -->
+  <img src="{{ logo_path }}" alt="오늘도국어학원 로고" class="header-logo" onerror="this.style.display='none'">
+
+  <!-- 상단 매거진 메타데이터 스트립: 생성 날짜 반영 -->
+  <div class="top-meta-bar">
+    <span class="meta-tag">SPECIAL ISSUE</span>
+    <span class="meta-text">{{ current_date_str }}</span>
+    <span class="meta-text" style="color: rgba(255,255,255,0.4);">|</span>
+    <span class="meta-text" style="color: #94A3B8;">{{ card.category_tag or ((card.badge|replace('⚡','')|replace('🔥','')|replace('🚨','')|replace('📢','')|trim) ~ ' 분석') if card.badge else '이슈 심층 브리핑' }}</span>
+  </div>
+
+  <div class="safe-canvas">
+    <!-- 메인 헤드라인 (NewScientist 계층 구조) -->
+    <div class="headline-section">
+      <div class="cover-kicker">
+        <span class="kicker-dot"></span>
+        <span>{{ card.category_tag or '이슈 심층 분석' }}</span>
+      </div>
+      
+      {% if card.title_html %}
+        <h1 class="main-title">{{ card.title_html | safe }}</h1>
+      {% else %}
+        <h1 class="main-title">
+          {{ card.title | replace('\n', '<br>') | safe }}
+        </h1>
+      {% endif %}
+
+      {% if card.subtitle %}
+      <p class="deck-text">{{ card.subtitle }}</p>
+      {% endif %}
+    </div>
+
+    <!-- 하단 에디토리얼 스토리 스택 (2개 컬럼 큐레이션 - 페이지 번호 제외 & 글자 확대) -->
+    {% if card.get('items') and card['items']|length > 0 %}
+    <div class="story-stack">
+      {% set item1 = card['items'][0] %}
+      <div class="story-card featured">
+        <div class="story-kicker">
+          <span>{{ item1.sub or 'KEY TOPIC 01' }}</span>
+        </div>
+        <div class="story-heading">{{ item1.label }}</div>
+        <div class="story-body">{{ item1.value or item1.detail or '' }}</div>
+      </div>
+      
+      {% if card['items']|length > 1 %}
+      {% set item2 = card['items'][1] %}
+      <div class="story-card">
+        <div class="story-kicker cyan">
+          <span>{{ item2.sub or 'KEY TOPIC 02' }}</span>
+        </div>
+        <div class="story-heading">{{ item2.label }}</div>
+        <div class="story-body">{{ item2.value or item2.detail or '' }}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 매거진 푸터 + 바코드 -->
+    <div class="magazine-footer">
+      <div class="brand-group">
+        {% set raw_brand = card.brand_report_name or ('오늘도국어학원 입시 리포트' if ('입시' in (card.category_tag or '') or '수시' in (card.category_tag or '') or '대입' in (card.category_tag or '') or '수능' in (card.category_tag or '')) else '오늘도국어학원 트렌드 리포트') %}
+        {% set normalized_brand = raw_brand.replace('오늘도국어학원', '오늘도국어').replace('오늘도국어', '오늘도국어학원') %}
+        <div class="brand-name">{{ normalized_brand.replace('국어', '<span class="brand-korean">국어</span>') | safe }}</div>
+        <div class="meta-sub-info">TODAYKOREAN EDITORIAL MAGAZINE</div>
+      </div>
+      <div class="footer-right">
+        <div class="swipe-cta">밀어서 분석 보기 ➔</div>
+        <!-- 정품 매거진 바코드 UI -->
+        <div class="barcode-box">
+          <svg class="barcode-svg" viewBox="0 0 100 30" preserveAspectRatio="none">
+            <rect x="0" y="0" width="3" height="30" fill="#000"/>
+            <rect x="5" y="0" width="1.5" height="30" fill="#000"/>
+            <rect x="8" y="0" width="4" height="30" fill="#000"/>
+            <rect x="14" y="0" width="2" height="30" fill="#000"/>
+            <rect x="18" y="0" width="1.5" height="30" fill="#000"/>
+            <rect x="22" y="0" width="4" height="30" fill="#000"/>
+            <rect x="28" y="0" width="2" height="30" fill="#000"/>
+            <rect x="32" y="0" width="3" height="30" fill="#000"/>
+            <rect x="37" y="0" width="1.5" height="30" fill="#000"/>
+            <rect x="41" y="0" width="4" height="30" fill="#000"/>
+            <rect x="47" y="0" width="2" height="30" fill="#000"/>
+            <rect x="52" y="0" width="3" height="30" fill="#000"/>
+            <rect x="57" y="0" width="1.5" height="30" fill="#000"/>
+            <rect x="61" y="0" width="4" height="30" fill="#000"/>
+            <rect x="67" y="0" width="2" height="30" fill="#000"/>
+            <rect x="71" y="0" width="3" height="30" fill="#000"/>
+            <rect x="76" y="0" width="1.5" height="30" fill="#000"/>
+            <rect x="80" y="0" width="4" height="30" fill="#000"/>
+            <rect x="86" y="0" width="2" height="30" fill="#000"/>
+            <rect x="90" y="0" width="3" height="30" fill="#000"/>
+            <rect x="95" y="0" width="4" height="30" fill="#000"/>
+          </svg>
+          <div class="barcode-digits">9 771234 567008</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

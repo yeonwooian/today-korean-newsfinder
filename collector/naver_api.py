@@ -2,7 +2,6 @@
 collector/naver_api.py
 ----------------------
 네이버 클라우드 플랫폼(NCP) NAVER API HUB 뉴스 검색 모듈.
-(News_finder.md 7절 규격)
 """
 
 from __future__ import annotations
@@ -37,7 +36,7 @@ def search_news_api(query: str, display: int = 10, start: int = 1, sort: str = "
         "query": query,
         "display": min(display, 30),
         "start": start,
-        "sort": sort,  # "date" (날짜순) 또는 "sim" (유사도순)
+        "sort": sort,
     }
 
     try:

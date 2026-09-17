@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 4:5 캔버스 규격 (1080 x 1350) */
+  body {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Pretendard', sans-serif;
+    background-color: #0B132B;
+    background-image: url('{{ bg_image_path }}');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    color: #FFFFFF;
+    word-break: keep-all;
+  }
+
+  /* 1. 베이스 필터: preview_dark_card2.png의 톤 (0.78 ~ 0.88) 유지 + 우측 하단만 부드럽게 감쇠 */
+  .dark-mask-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1080px; height: 1350px;
+    background: radial-gradient(
+      circle at 86% 88%,
+      rgba(11, 19, 43, 0.32) 0%,
+      rgba(11, 19, 43, 0.48) 120px,
+      rgba(11, 19, 43, 0.76) 240px,
+      rgba(11, 19, 43, 0.86) 360px,
+      rgba(11, 19, 43, 0.88) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* 상단에서 하단으로 이어지는 은은한 그라데이션 추가 (preview_dark_card2의 0.78~0.88 톤앤매너 완벽 일치) */
+  .linear-tone-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1080px; height: 1350px;
+    background: linear-gradient(180deg, rgba(11, 19, 43, 0.35) 0%, rgba(15, 23, 42, 0.15) 60%, rgba(11, 19, 43, 0.05) 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* 2. 선생님 위로 비추는 은은하고 차분한 핀조명 글로우 (약간 낮춘 소프트 웜톤) */
+  .teacher-spotlight-glow {
+    position: absolute;
+    bottom: 20px;
+    right: 25px;
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(
+      circle at 62% 60%,
+      rgba(255, 235, 190, 0.20) 0%,
+      rgba(255, 215, 140, 0.10) 50%,
+      rgba(11, 19, 43, 0) 75%
+    );
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: screen;
+  }
+
+  /* 상단 블루 조명 */
+  .glow-bg {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    top: -100px;
+    left: -100px;
+    background: radial-gradient(circle, rgba(0, 102, 255, 0.14) 0%, rgba(11, 19, 43, 0) 70%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* 우측 상단 화이트 로고 (1080x1080 박스 바로 위) */
+  .header-logo {
+    position: absolute;
+    top: 70px;
+    right: 70px;
+    width: 185px;
+    z-index: 10;
+  }
+
+  /* 중앙 1080 x 1080 핵심 안전 영역 (상하 여백 135px) */
+  .safe-zone {
+    position: absolute;
+    top: 135px;
+    left: 0;
+    width: 1080px;
+    height: 1080px;
+    padding: 22px 70px 90px 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 5;
+  }
+
+  /* 상단 헤더 */
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .badge {
+    padding: 8px 24px;
+    background: #FF5A2B;
+    border-radius: 8px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+    box-shadow: 0 4px 15px rgba(255, 90, 43, 0.35);
+  }
+  .page-number {
+    font-size: 28px;
+    font-weight: 600;
+    color: #94A3B8;
+  }
+
+  /* 타이틀 영역 */
+  .title-section {
+    margin-bottom: 20px;
+    max-width: 830px;
+  }
+  .main-title {
+    font-size: 58px;
+    font-weight: 800;
+    line-height: 1.28;
+    color: #FFFFFF;
+    letter-spacing: -1.6px;
+    word-break: keep-all;
+  }
+  .sub-title {
+    margin-top: 12px;
+    font-size: 34px;
+    color: #94A3B8;
+    font-weight: 500;
+    word-break: keep-all;
+  }
+
+  /* 강조 컬러 클래스 */
+  .text-orange { color: #FF5A2B !important; }
+  .text-blue   { color: #00A3FF !important; }
+
+  /* 가변 콘텐츠 영역 */
+  .content-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  /* 1. 통계형 레이아웃 (stat) */
+  .stat-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 20px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .stat-label {
+    font-size: 36px;
+    font-weight: 700;
+    color: #FFFFFF;
+  }
+  .stat-subtext {
+    font-size: 28px;
+    color: #94A3B8;
+    margin-top: 6px;
+  }
+  .stat-val-group {
+    text-align: right;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .stat-primary {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+  .stat-secondary {
+    font-size: 34px;
+    font-weight: 700;
+    margin-left: 8px;
+  }
+
+  /* 2. 2분할 비교형 레이아웃 (comparison) */
+  .comparison-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .comp-box {
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 22px 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .comp-box.orange { border-color: #FF5A2B; }
+  .comp-box.blue   { border-color: #0066FF; }
+  .comp-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+  .comp-value {
+    font-size: 54px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+  .comp-desc {
+    font-size: 28px;
+    color: #CBD5E1;
+    line-height: 1.38;
+  }
+
+  /* 3. 결론 카드 전용 스타일 (conclusion) */
+  .conclusion-box {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(14px);
+    border-radius: 22px;
+    padding: 24px 26px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .list-card {
+    background: rgba(255, 255, 255, 0.07);
+    border-left: 6px solid #FF5A2B;
+    border-radius: 0 16px 16px 0;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .list-card.blue { border-left-color: #0066FF; }
+  .list-head {
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  .list-body {
+    font-size: 28px;
+    color: #CBD5E1;
+    line-height: 1.42;
+  }
+  .cta-banner {
+    margin-top: 14px;
+    background: rgba(255, 90, 43, 0.15);
+    border: 1.5px solid #FF5A2B;
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 28px;
+    font-weight: 700;
+    color: #FF7A50;
+  }
+
+  /* 4. 기본 분석/불릿 리스트형 레이아웃 (list) */
+  .list-card-standalone {
+    background: rgba(255, 255, 255, 0.08);
+    border-left: 6px solid #FF5A2B;
+    border-radius: 0 18px 18px 0;
+    padding: 20px 28px;
+    backdrop-filter: blur(14px);
+  }
+
+  /* 5. 타임라인 / 3단계 스텝형 (step) */
+  .step-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    padding: 6px 0;
+  }
+  .step-axis {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    bottom: 20px;
+    width: 3px;
+    border-left: 3px dotted rgba(255, 255, 255, 0.35);
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+  .step-row {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+  }
+  .step-row.left { justify-content: flex-start; }
+  .step-row.right { justify-content: flex-end; }
+  .step-card {
+    width: 440px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.20);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: 16px 20px;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .step-card.orange { border-color: #FF5A2B; }
+  .step-card.blue   { border-color: #00A3FF; }
+  .step-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .step-badge {
+    padding: 4px 14px;
+    border-radius: 6px;
+    font-size: 22px;
+    font-weight: 800;
+    color: #FFFFFF;
+  }
+  .step-badge.orange { background: #FF5A2B; }
+  .step-badge.blue   { background: #00A3FF; }
+  .step-desc {
+    font-size: 22px;
+    color: #CBD5E1;
+    line-height: 1.38;
+  }
+  .step-dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid #0B132B;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  }
+  .step-row.left .step-dot { background: #FF5A2B; }
+  .step-row.right .step-dot { background: #00A3FF; }
+
+  /* 6. 초대형 단일 수치 + 분석 리스트 (hero_stat) */
+  .hero-stat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+  }
+  .hero-number-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 10px;
+  }
+  .hero-giant-num {
+    font-size: 90px;
+    font-weight: 900;
+    color: #FF5A2B;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    text-shadow: 0 4px 30px rgba(255, 90, 43, 0.45);
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+  .hero-giant-num.blue {
+    color: #00A3FF;
+    text-shadow: 0 4px 30px rgba(0, 163, 255, 0.45);
+  }
+  .hero-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex-grow: 1;
+  }
+  .hero-sub-label {
+    font-size: 24px;
+    font-weight: 600;
+    color: #94A3B8;
+  }
+  .hero-lead-text {
+    font-size: 40px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.25;
+    word-break: keep-all;
+  }
+  .hero-analysis-box {
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid #FF5A2B;
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 22px 26px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .hero-analysis-box.blue { border-color: #00A3FF; }
+  .hero-analysis-title {
+    font-size: 30px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+  }
+  .hero-bullet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .hero-bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 24px;
+    color: #E2E8F0;
+    line-height: 1.40;
+  }
+  .hero-check-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: #00A3FF;
+    color: #FFFFFF;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 900;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  /* 7. 4분할 그리드형 (grid) */
+  .grid-2x2-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    width: 100%;
+  }
+  .grid-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 190px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .grid-card.orange { border-color: rgba(255, 90, 43, 0.6); }
+  .grid-card.blue   { border-color: rgba(0, 163, 255, 0.6); }
+  .grid-badge {
+    align-self: flex-start;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 22px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 12px;
+  }
+  .grid-badge.orange { background: #FF5A2B; }
+  .grid-badge.blue   { background: #00A3FF; }
+  .grid-body {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .grid-desc {
+    font-size: 24px;
+    color: #CBD5E1;
+    font-weight: 600;
+    line-height: 1.38;
+    flex-grow: 1;
+  }
+  .grid-icon {
+    font-size: 38px;
+    flex-shrink: 0;
+  }
+
+  /* 8. 상하 인과관계 흐름형 (flow) */
+  .flow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .flow-box {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 20px 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .flow-box.orange { border-color: #FF5A2B; }
+  .flow-box.blue   { border-color: #00A3FF; }
+  .flow-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .flow-title {
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .flow-title.orange { color: #FF7A50; }
+  .flow-title.blue   { color: #00A3FF; }
+  .flow-desc {
+    font-size: 24px;
+    color: #CBD5E1;
+    line-height: 1.40;
+  }
+  .flow-arrow-down {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #FF5A2B;
+    background: linear-gradient(180deg, #00A3FF, #FF5A2B);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 8px rgba(255, 90, 43, 0.4));
+    line-height: 1;
+    margin: 2px 0;
+  }
+
+  /* 9. Q&A 메신저 대화창형 (chat) */
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+  .chat-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+  .chat-row.student { justify-content: flex-start; }
+  .chat-row.teacher { justify-content: flex-end; }
+  .chat-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    flex-shrink: 0;
+  }
+  .chat-bubble-student {
+    background: #FFFFFF;
+    color: #0F172A;
+    border-radius: 18px 18px 18px 4px;
+    padding: 14px 20px;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.4;
+    max-width: 680px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  }
+  .chat-bubble-teacher {
+    background: rgba(15, 23, 42, 0.88);
+    border: 2px solid #FF5A2B;
+    color: #FFFFFF;
+    border-radius: 18px 18px 4px 18px;
+    padding: 14px 20px;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.4;
+    max-width: 680px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 10. 다항목 비교 표/테이블형 (table) */
+  .table-container {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .matrix-th {
+    padding: 14px 14px;
+    font-size: 26px;
+    font-weight: 800;
+    text-align: center;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
+  }
+  .matrix-th.orange {
+    color: #FF5A2B;
+    background: rgba(255, 90, 43, 0.12);
+  }
+  .matrix-th.blue {
+    color: #00A3FF;
+    background: rgba(0, 163, 255, 0.12);
+  }
+  .matrix-td {
+    padding: 14px 16px;
+    font-size: 22px;
+    line-height: 1.36;
+    color: #E2E8F0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    vertical-align: middle;
+  }
+  .matrix-td.criterion {
+    font-size: 23px;
+    font-weight: 700;
+    color: #FF7A50;
+    background: rgba(255, 255, 255, 0.03);
+    width: 22%;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .matrix-td.target-a {
+    width: 39%;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .matrix-td.target-b {
+    width: 39%;
+  }
+
+  /* 11. 루머 검증 / 팩트체크형 (factcheck) */
+  .factcheck-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .rumor-box {
+    position: relative;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.20);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 24px 34px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .rumor-quote-left {
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    font-size: 64px;
+    color: #FF5A2B;
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+  .rumor-quote-right {
+    position: absolute;
+    bottom: -24px;
+    right: 20px;
+    font-size: 64px;
+    color: #FF5A2B;
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+  .rumor-text {
+    font-size: 28px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.38;
+    word-break: keep-all;
+  }
+  .rumor-source {
+    font-size: 22px;
+    color: #94A3B8;
+    margin-top: 8px;
+  }
+  .factcheck-box {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid #00A3FF;
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 20px 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .factcheck-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 163, 255, 0.20);
+    color: #00A3FF;
+    font-size: 24px;
+    font-weight: 800;
+    border-radius: 8px;
+    padding: 4px 14px;
+    margin-bottom: 10px;
+  }
+  .factcheck-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .factcheck-item {
+    font-size: 23px;
+    color: #CBD5E1;
+    line-height: 1.40;
+  }
+
+  /* 12. 스마트폰 푸시 알림 센터형 (push) */
+  .push-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+  .push-card {
+    background: rgba(30, 41, 59, 0.78);
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(16px);
+    border-radius: 22px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  }
+  .push-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .push-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+  .push-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .push-app-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #94A3B8;
+  }
+  .push-app-name .push-korean {
+    color: #C74417;
+    font-weight: 800;
+  }
+  .push-time {
+    font-size: 18px;
+    color: #64748B;
+    font-weight: 500;
+  }
+  .push-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .push-body {
+    font-size: 21px;
+    color: #CBD5E1;
+    line-height: 1.35;
+  }
+
+  /* 13. O/X 자가 진단 체크리스트형 (ox_quiz) */
+  .ox-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  .ox-row {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+  .ox-row.orange { border-color: rgba(255, 90, 43, 0.6); }
+  .ox-row.blue   { border-color: rgba(0, 163, 255, 0.6); }
+  .ox-btn-o {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 3.5px solid #FF5A2B;
+    color: #FF5A2B;
+    flex-shrink: 0;
+  }
+  .ox-btn-o.blue {
+    border-color: #00A3FF;
+    color: #00A3FF;
+  }
+  .ox-btn-o-char {
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .ox-btn-o-sub {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    margin-top: 2px;
+  }
+  .ox-content {
+    flex-grow: 1;
+  }
+  .ox-question {
+    font-size: 24px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .ox-question.orange { color: #FF7A50; }
+  .ox-question.blue   { color: #38BDF8; }
+  .ox-detail {
+    font-size: 21px;
+    color: #CBD5E1;
+    line-height: 1.35;
+  }
+  .ox-btn-x {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.25);
+    flex-shrink: 0;
+    width: 44px;
+  }
+  .ox-btn-x-char {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .ox-btn-x-sub {
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* 14. 중앙 허브 & 방사형 마인드맵 (mindmap) */
+  .mindmap-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mindmap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+  }
+  .mindmap-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 180px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .mindmap-card.orange { border-color: #FF5A2B; }
+  .mindmap-card.blue   { border-color: #00A3FF; }
+  .mindmap-badge {
+    align-self: flex-start;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .mindmap-card:nth-child(2) .mindmap-badge,
+  .mindmap-card:nth-child(4) .mindmap-badge {
+    align-self: flex-end;
+  }
+  .mindmap-badge.orange { color: #FF7A50; }
+  .mindmap-badge.blue   { color: #00A3FF; }
+  .mindmap-desc {
+    font-size: 22px;
+    color: #CBD5E1;
+    line-height: 1.35;
+    font-weight: 500;
+  }
+  .mindmap-center-hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: #0B132B;
+    border: 3px solid #FF5A2B;
+    box-shadow: 0 0 25px rgba(255, 90, 43, 0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    text-align: center;
+  }
+  .mindmap-hub-icon {
+    font-size: 34px;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .mindmap-hub-text {
+    font-size: 16px;
+    font-weight: 800;
+    color: #FF7A50;
+    line-height: 1.2;
+    padding: 0 8px;
+  }
+
+  /* 15. 비포 & 애프터 대조형 (before_after) */
+  .ba-container {
+    display: grid;
+    grid-template-columns: 1fr 1.06fr;
+    gap: 16px;
+    width: 100%;
+  }
+  .ba-box {
+    border-radius: 20px;
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(14px);
+  }
+  .ba-box.before {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(239, 68, 68, 0.4);
+  }
+  .ba-box.after {
+    background: rgba(255, 90, 43, 0.08);
+    border: 2.5px solid #FF5A2B;
+    box-shadow: 0 0 24px rgba(255, 90, 43, 0.35);
+  }
+  .ba-title {
+    font-size: 26px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .ba-box.before .ba-title { color: #94A3B8; }
+  .ba-box.after .ba-title  { color: #FF7A50; }
+  .ba-big-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .ba-big-icon {
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .ba-big-icon.red {
+    color: #EF4444;
+    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.4));
+  }
+  .ba-big-icon.blue {
+    color: #00A3FF;
+    filter: drop-shadow(0 0 10px rgba(0, 163, 255, 0.4));
+  }
+  .ba-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ba-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 22px;
+    line-height: 1.38;
+    color: #CBD5E1;
+  }
+  .ba-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+  .ba-dot.red  { background: #EF4444; }
+  .ba-dot.blue { background: #00A3FF; }
+
+  /* 16. 방사형 그래프형 (radar) - Radar/Spider Radial Connector */
+  .radar-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 440px;
+  }
+  .radar-svg-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .radar-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 110px;
+    width: 100%;
+    z-index: 2;
+  }
+  .radar-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 20px 22px;
+    min-height: 176px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .radar-card.orange { border-color: rgba(255, 90, 43, 0.7); }
+  .radar-card.blue   { border-color: rgba(0, 163, 255, 0.7); }
+  .radar-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .radar-num {
+    font-size: 16px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: -0.2px;
+  }
+  .radar-num.orange { background: rgba(255, 90, 43, 0.25); color: #FF5A2B; }
+  .radar-num.blue   { background: rgba(0, 163, 255, 0.25); color: #00A3FF; }
+  .radar-label {
+    font-size: 23px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  .radar-label.orange { color: #FF7A50; }
+  .radar-label.blue   { color: #38BDF8; }
+  .radar-desc {
+    font-size: 20.5px;
+    color: #CBD5E1;
+    line-height: 1.38;
+    font-weight: 500;
+    word-break: keep-all;
+  }
+  .radar-center-hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: #0B132B;
+    border: 2.5px solid #FF5A2B;
+    box-shadow: 0 0 24px rgba(255, 90, 43, 0.55), inset 0 0 12px rgba(255, 90, 43, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    text-align: center;
+  }
+  .radar-hub-icon {
+    font-size: 26px;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .radar-hub-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.2;
+    padding: 0 6px;
+  }
+  .radar-hub-tag {
+    font-size: 9px;
+    font-weight: 900;
+    color: #FF7A50;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* 17. 시험지 / OMR 지문 분석형 (exam) - Test Paper & Annotation */
+  .exam-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+  .exam-paper-box {
+    width: 100%;
+    background: #F8FAFC;
+    color: #0F172A;
+    border-radius: 20px;
+    padding: 18px 22px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    position: relative;
+  }
+  .exam-paper-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid #CBD5E1;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .exam-badge-header {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1E293B;
+    background: #E2E8F0;
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+  .exam-header-sub {
+    font-size: 18px;
+    font-weight: 600;
+    color: #64748B;
+  }
+  .exam-paper-body {
+    position: relative;
+    line-height: 1.50;
+    font-size: 22px;
+    color: #1E293B;
+    word-break: keep-all;
+  }
+  .exam-passage-text mark.exam-highlight {
+    background: rgba(255, 90, 43, 0.28);
+    color: #0F172A;
+    font-weight: 800;
+    border-bottom: 3px solid #FF5A2B;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  .exam-annotation-wrap {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .exam-pencil-arrow {
+    font-size: 22px;
+    color: #EF4444;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .exam-annotation-tag {
+    font-size: 17px;
+    font-weight: 800;
+    color: #EF4444;
+    border: 1.5px solid #EF4444;
+    background: rgba(239, 68, 68, 0.08);
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: -0.3px;
+  }
+  .exam-divider-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 90, 43, 0.18);
+    border: 1.5px solid #FF5A2B;
+    color: #FF7A50;
+    font-size: 20px;
+    font-weight: 800;
+    padding: 4px 18px;
+    border-radius: 20px;
+    letter-spacing: -0.3px;
+  }
+  .exam-solution-box {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.88);
+    border: 2px solid #00A3FF;
+    backdrop-filter: blur(16px);
+    border-radius: 20px;
+    padding: 16px 22px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  }
+  .exam-solution-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: #00A3FF;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 163, 255, 0.25);
+    padding-bottom: 6px;
+  }
+  .exam-solution-sub {
+    font-size: 17px;
+    font-weight: 600;
+    color: #94A3B8;
+  }
+  .exam-solution-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .exam-solution-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 21px;
+    color: #E2E8F0;
+    line-height: 1.38;
+  }
+  .exam-check-icon {
+    color: #00A3FF;
+    font-weight: 900;
+    font-size: 19px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .exam-solution-content strong {
+    color: #FFFFFF;
+    font-weight: 800;
+  }
+
+  /* 하단 코멘트/인사이트 (1차 확대 26px 적용) */
+  .card-footer {
+    padding-top: 16px;
+    border-top: 1.5px dashed rgba(255, 255, 255, 0.18);
+    max-width: 680px;
+  }
+  .tip-text {
+    font-size: 26px;
+    font-weight: 600;
+    color: #CBD5E1;
+    line-height: 1.45;
+    word-break: keep-all;
+  }
+</style>
+</head>
+<body>
+  <!-- 다크 마스크 및 차분한 핀조명 효과 -->
+  <div class="dark-mask-overlay"></div>
+  <div class="linear-tone-overlay"></div>
+  <div class="teacher-spotlight-glow"></div>
+  <div class="glow-bg"></div>
+
+  <!-- 우측 상단 화이트 로고 -->
+  <img src="{{ logo_path }}" alt="로고" class="header-logo" onerror="this.style.display='none'">
+
+  <div class="safe-zone">
+    <!-- 헤더 & 타이틀 -->
+    <div>
+      <div class="card-header">
+        <div class="badge">{{ card.badge }}</div>
+        <div class="page-number">{{ card.card_number }} / {{ total_pages }}</div>
+      </div>
+      <div class="title-section">
+        <h1 class="main-title">{{ card.title }}</h1>
+        {% if card.subtitle %}
+        <p class="sub-title">{{ card.subtitle }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 레이아웃별 분기 -->
+    <div class="content-area">
+      {# CASE 1: 대형 수치/통계형 #}
+      {% if card.layout_type == 'stat' %}
+        {% for item in card['items'] %}
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">{{ item.label }}</div>
+            {% if item.detail %}<div class="stat-subtext">{{ item.detail }}</div>{% endif %}
+          </div>
+          <div class="stat-val-group">
+            <span class="stat-primary {% if item.highlight == 'orange' %}text-orange{% elif item.highlight == 'blue' %}text-blue{% endif %}">
+              {{ item.value or '' }}
+            </span>
+            {% if item.sub %}
+            <span class="stat-secondary {% if item.sub_highlight == 'orange' %}text-orange{% elif item.sub_highlight == 'blue' %}text-blue{% endif %}">
+              {{ item.sub }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+
+      {# CASE 2: 2분할 비교형 #}
+      {% elif card.layout_type == 'comparison' %}
+        <div class="comparison-container">
+          {% for comp in card['items'] %}
+          <div class="comp-box {{ comp.color or 'orange' }}">
+            <div class="comp-title {% if comp.color == 'blue' %}text-blue{% else %}text-orange{% endif %}">
+              {{ comp.label }}
+            </div>
+            <div class="comp-value">{{ comp.value or '' }}</div>
+            {% if comp.detail %}
+            <div class="comp-desc">{{ comp.detail }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+      {# CASE 3: 타임라인 / 3단계 스텝형 #}
+      {% elif card.layout_type == 'step' %}
+        <div class="step-container">
+          <div class="step-axis"></div>
+          {% for item in card['items'] %}
+          {% set is_even = loop.index % 2 == 0 %}
+          <div class="step-row {% if is_even %}right{% else %}left{% endif %}">
+            <div class="step-card {% if is_even %}blue{% else %}orange{% endif %}">
+              <div class="step-card-header">
+                <span class="step-badge {% if is_even %}blue{% else %}orange{% endif %}">{{ item.label }}</span>
+                <span style="font-size: 24px;">{% if is_even %}📌{% else %}⚡{% endif %}</span>
+              </div>
+              <div class="step-desc">{{ item.detail }}</div>
+            </div>
+            <div class="step-dot"></div>
+          </div>
+          {% endfor %}
+        </div>
+
+      {# CASE 4: 초대형 단일 수치 + 분석 리스트 #}
+      {% elif card.layout_type == 'hero_stat' %}
+        <div class="hero-stat-container">
+          {% set hero_item = card['items'][0] %}
+          {% set val_str = (hero_item.value or '') | string %}
+          {% set val_len = val_str | length %}
+          <div class="hero-number-box">
+            <span class="hero-giant-num {% if hero_item.highlight == 'blue' %}blue{% endif %}"
+              {% if val_len >= 14 %}style="font-size: 46px;"
+              {% elif val_len >= 11 %}style="font-size: 54px;"
+              {% elif val_len >= 8 %}style="font-size: 64px;"
+              {% elif val_len >= 6 %}style="font-size: 76px;"
+              {% endif %}
+            >{{ hero_item.value or '' }}</span>
+            <div class="hero-text-group">
+              <span class="hero-sub-label">{{ hero_item.sub or '단위' }}</span>
+              <span class="hero-lead-text">{{ hero_item.label }}</span>
+            </div>
+          </div>
+          <div class="hero-analysis-box {% if hero_item.highlight == 'blue' %}blue{% endif %}">
+            <div class="hero-analysis-title">{{ card.subtitle or '세부 현황 및 원인 분석' }}</div>
+            <div class="hero-bullet-list">
+              {% for item in card['items'][1:] %}
+              <div class="hero-bullet-item">
+                <span class="hero-check-icon">✓</span>
+                <span>{{ item.detail or item.label }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+      {# CASE 5: 4분할 그리드형 #}
+      {% elif card.layout_type == 'grid' %}
+        <div class="grid-2x2-container">
+          {% for item in card['items'] %}
+          {% set is_blue = (loop.index in [3, 4]) or (item.color == 'blue') %}
+          <div class="grid-card {% if is_blue %}blue{% else %}orange{% endif %}">
+            <div class="grid-badge {% if is_blue %}blue{% else %}orange{% endif %}">{{ item.label }}</div>
+            <div class="grid-body">
+              <div class="grid-desc">{{ item.detail }}</div>
+              <div class="grid-icon">{% if loop.index == 1 %}📊{% elif loop.index == 2 %}❓{% elif loop.index == 3 %}🔍{% else %}📁{% endif %}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      {# CASE 6: 상하 인과관계 흐름형 #}
+      {% elif card.layout_type == 'flow' %}
+        <div class="flow-container">
+          {% set cause = card['items'][0] %}
+          <div class="flow-box orange">
+            <div class="flow-header">
+              <span class="flow-title orange">{{ cause.label }}</span>
+              <span style="font-size: 28px;">⏱️</span>
+            </div>
+            <div class="flow-desc">{{ cause.detail }}</div>
+          </div>
+          <div class="flow-arrow-down">▼</div>
+          {% if card['items']|length > 1 %}
+          {% set effect = card['items'][1] %}
+          <div class="flow-box blue">
+            <div class="flow-header">
+              <span class="flow-title blue">{{ effect.label }}</span>
+              <span style="font-size: 28px;">📊</span>
+            </div>
+            <div class="flow-desc">{{ effect.detail }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+      {# CASE 7: Q&A 메신저 대화창형 #}
+      {% elif card.layout_type == 'chat' %}
+        <div class="chat-container">
+          {% for item in card['items'] %}
+          {% set is_teacher = (item.color == 'orange') or ('선생님' in (item.label or '')) or ('T' in (item.label or '')) or (loop.index % 2 == 0) %}
+          <div class="chat-row {% if is_teacher %}teacher{% else %}student{% endif %}">
+            {% if not is_teacher %}
+            <div class="chat-avatar">👩‍🎓</div>
+            <div class="chat-bubble-student">{{ item.detail or item.label }}</div>
+            {% else %}
+            <div class="chat-bubble-teacher">{{ item.detail or item.label }}</div>
+            <div class="chat-avatar" style="border-color: #FF5A2B;">👩‍🏫</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+      {# CASE 8: 다항목 비교 표/테이블형 #}
+      {% elif card.layout_type == 'table' %}
+        <div class="table-container">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th class="matrix-th" style="width: 22%; background: rgba(255,255,255,0.05); color: #94A3B8;">비교 기준</th>
+                <th class="matrix-th orange" style="width: 39%;">{{ card.subtitle or '조기 접수자' }}</th>
+                <th class="matrix-th blue" style="width: 39%;">{{ card.footer_insight or '연장 접수자' }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in card['items'] %}
+              <tr>
+                <td class="matrix-td criterion">{{ item.label }}</td>
+                <td class="matrix-td target-a">{{ item.value or item.detail or '' }}</td>
+                <td class="matrix-td target-b">{{ item.detail or item.sub or '' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      {# CASE 9: 루머 검증 / 팩트체크형 #}
+      {% elif card.layout_type == 'factcheck' %}
+        <div class="factcheck-container">
+          {% set quote_item = card['items'][0] %}
+          <div class="rumor-box">
+            <span class="rumor-quote-left">“</span>
+            <div class="rumor-text">{{ quote_item.label }}</div>
+            {% if quote_item.sub %}<div class="rumor-source">{{ quote_item.sub }}</div>{% endif %}
+            <span class="rumor-quote-right">”</span>
+          </div>
+          <div class="flow-arrow-down">▼</div>
+          <div class="factcheck-box">
+            <div class="factcheck-badge">💡 팩트 체크 & 분석</div>
+            <div class="factcheck-bullets">
+              {% for item in card['items'][1:] %}
+              <div class="factcheck-item"><strong>{{ item.label }}</strong>{% if item.detail %}: {{ item.detail }}{% endif %}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+      {# CASE 10: 스마트폰 푸시 알림 센터형 #}
+      {% elif card.layout_type == 'push' %}
+        <div class="push-container">
+          {% for item in card['items'] %}
+          <div class="push-card">
+            <div class="push-icon-box">
+              {% if '캘린더' in (item.sub or item.label or '') or '마감' in (item.label or '') %}📅
+              {% elif '공지' in (item.sub or item.label or '') or '속보' in (item.label or '') %}🔔
+              {% else %}📢{% endif %}
+            </div>
+            <div class="push-content">
+              <div class="push-top-row">
+                {% set raw_push_app = item.sub if (item.sub and item.sub != '학원 알림') else '오늘도국어학원에서 알림' %}
+                {% set normalized_push_app = raw_push_app.replace('오늘도국어 알림', '오늘도국어학원에서 알림').replace('오늘도국어학원 알림', '오늘도국어학원에서 알림') %}
+                <span class="push-app-name">{{ normalized_push_app.replace('국어', '<span class="push-korean">국어</span>') | safe }}</span>
+                <span class="push-time">{{ item.highlight or '방금 전 | 알림' }}</span>
+              </div>
+              <div class="push-title">{{ item.label }}</div>
+              <div class="push-body">{{ item.detail }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      {# CASE 11: O/X 자가 진단 체크리스트형 #}
+      {% elif card.layout_type == 'ox_quiz' %}
+        <div class="ox-container">
+          {% for item in card['items'] %}
+          {% set is_blue = (loop.index in [2, 3]) or (item.color == 'blue') %}
+          <div class="ox-row {% if is_blue %}blue{% else %}orange{% endif %}">
+            <div class="ox-btn-o {% if is_blue %}blue{% endif %}">
+              <span class="ox-btn-o-char">O</span>
+              <span class="ox-btn-o-sub">예</span>
+            </div>
+            <div class="ox-content">
+              <div class="ox-question {% if is_blue %}blue{% else %}orange{% endif %}">{{ item.label }}</div>
+              <div class="ox-detail">{{ item.detail }}</div>
+            </div>
+            <div class="ox-btn-x">
+              <span class="ox-btn-x-char">✕</span>
+              <span class="ox-btn-x-sub">아니오</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      {# CASE 12: 중앙 허브 & 방사형 마인드맵 #}
+      {% elif card.layout_type == 'mindmap' %}
+        <div class="mindmap-container">
+          <div class="mindmap-grid">
+            {% for item in card['items'][:4] %}
+            {% set is_blue = (loop.index in [2, 4]) or (item.color == 'blue') %}
+            <div class="mindmap-card {% if is_blue %}blue{% else %}orange{% endif %}">
+              <div class="mindmap-badge {% if is_blue %}blue{% else %}orange{% endif %}">{{ item.label }}</div>
+              <div class="mindmap-desc">{{ item.detail }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="mindmap-center-hub">
+            <div class="mindmap-hub-icon">🧠</div>
+            <div class="mindmap-hub-text">{{ card.subtitle or '최종 합격 목표' }}</div>
+          </div>
+        </div>
+
+      {# CASE 13: 비포 & 애프터 대조형 #}
+      {% elif card.layout_type == 'before_after' %}
+        <div class="ba-container">
+          {% set before_item = card['items'][0] %}
+          <div class="ba-box before">
+            <div class="ba-title">{{ before_item.label or '비포 - 실패 패턴' }}</div>
+            <div class="ba-big-icon-wrap">
+              <span class="ba-big-icon red">✕</span>
+              <span style="font-size: 32px; filter: grayscale(1);">💡</span>
+            </div>
+            <div class="ba-bullets">
+              {% if before_item.detail %}
+                {% for line in before_item.detail.split('\n') if line.strip() %}
+                <div class="ba-item">
+                  <span class="ba-dot red"></span>
+                  <span>{{ line.strip() }}</span>
+                </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+
+          {% if card['items']|length > 1 %}
+          {% set after_item = card['items'][1] %}
+          <div class="ba-box after">
+            <div class="ba-title">{{ after_item.label or '애프터 - 합격 패턴' }}</div>
+            <div class="ba-big-icon-wrap">
+              <span class="ba-big-icon blue">✓</span>
+              <span style="font-size: 32px;">💡</span>
+            </div>
+            <div class="ba-bullets">
+              {% if after_item.detail %}
+                {% for line in after_item.detail.split('\n') if line.strip() %}
+                <div class="ba-item">
+                  <span class="ba-dot blue"></span>
+                  <span>{{ line.strip() }}</span>
+                </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+      {# CASE 15: 방사형 그래프형 (Radar/Spider Radial Connector) #}
+      {% elif card.layout_type == 'radar' %}
+        <div class="radar-container">
+          <!-- 4개 방위 화살표 SVG 연결선 -->
+          <svg class="radar-svg-canvas" viewBox="0 0 920 440">
+            <defs>
+              <marker id="radar-arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#FF5A2B" />
+              </marker>
+              <marker id="radar-arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#00A3FF" />
+              </marker>
+            </defs>
+            <!-- 1번 카드(좌상) 연결선 -->
+            <line x1="445" y1="210" x2="405" y2="182" stroke="#FF5A2B" stroke-width="2.5" stroke-dasharray="5,4" marker-end="url(#radar-arrow-orange)" />
+            <!-- 2번 카드(우상) 연결선 -->
+            <line x1="475" y1="210" x2="515" y2="182" stroke="#00A3FF" stroke-width="2.5" stroke-dasharray="5,4" marker-end="url(#radar-arrow-blue)" />
+            <!-- 3번 카드(좌하) 연결선 -->
+            <line x1="445" y1="230" x2="405" y2="258" stroke="#FF5A2B" stroke-width="2.5" stroke-dasharray="5,4" marker-end="url(#radar-arrow-orange)" />
+            <!-- 4번 카드(우하) 연결선 -->
+            <line x1="475" y1="230" x2="515" y2="258" stroke="#00A3FF" stroke-width="2.5" stroke-dasharray="5,4" marker-end="url(#radar-arrow-blue)" />
+          </svg>
+
+          <!-- 2x2 세부 정보 박스 그리드 -->
+          <div class="radar-grid">
+            {% for item in card['items'][:4] %}
+            {% set is_blue = (loop.index in [2, 4]) or (item.color == 'blue') %}
+            <div class="radar-card {% if is_blue %}blue{% else %}orange{% endif %}">
+              <div class="radar-card-header">
+                <span class="radar-num {% if is_blue %}blue{% else %}orange{% endif %}">0{{ loop.index }}</span>
+                <span class="radar-label {% if is_blue %}blue{% else %}orange{% endif %}">{{ item.label }}</span>
+              </div>
+              <div class="radar-desc">{{ item.detail }}</div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- 중앙 원형 코어 허브 -->
+          <div class="radar-center-hub">
+            <div class="radar-hub-icon">🎯</div>
+            <div class="radar-hub-title">{{ card.subtitle or '종합 필승 전략' }}</div>
+            <div class="radar-hub-tag">CORE MANUAL</div>
+          </div>
+        </div>
+
+      {# CASE 16: 시험지 / OMR 지문 첨삭 분석형 (Test Paper & Annotation) #}
+      {% elif card.layout_type == 'exam' %}
+        <div class="exam-container">
+          <!-- 1. 상단 라이트 시험지 지문 박스 -->
+          <div class="exam-paper-box">
+            <div class="exam-paper-header">
+              <span class="exam-badge-header">📄 수능·모의평가 지문 분석</span>
+              <span class="exam-header-sub">{{ card.subtitle or '[실전 킬러 지문 핵심 문맥]' }}</span>
+            </div>
+            
+            {% set passage_item = card['items'][0] if card['items']|length > 0 else none %}
+            {% if passage_item %}
+            <div class="exam-paper-body">
+              <div class="exam-passage-text">
+                {{ (passage_item.detail | replace('[[', '<mark class="exam-highlight">') | replace(']]', '</mark>') | safe) if passage_item.detail else passage_item.label }}
+              </div>
+              <div class="exam-annotation-wrap">
+                <span class="exam-pencil-arrow">↗</span>
+                <span class="exam-annotation-tag">★ {{ passage_item.sub or '출제자의 킬러 함정 포인트!' }}</span>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- 2. 중앙 연결 배지 화살표 -->
+          <div class="exam-divider-badge">
+            <span>⬇ 이T의 실전 3초 독해 공식</span>
+          </div>
+
+          <!-- 3. 하단 이T 핵심 독해 솔루션 박스 (다크 네이비 글래스) -->
+          <div class="exam-solution-box">
+            <div class="exam-solution-title">
+              <span>💡 실전 정답 도출 매뉴얼</span>
+              <span class="exam-solution-sub">오늘도국어 시크릿 솔루션</span>
+            </div>
+            <div class="exam-solution-bullets">
+              {% for sol in card['items'][1:] %}
+              <div class="exam-solution-item">
+                <span class="exam-check-icon">✔</span>
+                <div class="exam-solution-content">
+                  <strong>{{ sol.label }}</strong>: {{ sol.detail }}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+      {# CASE 14: 결론 및 총평형 #}
+      {% elif card.layout_type == 'conclusion' %}
+        <div class="conclusion-box">
+          {% for item in card['items'] %}
+          <div class="list-card {{ item.color or 'orange' }}" style="margin-bottom: 12px;">
+            <div class="list-head {% if item.color == 'blue' %}text-blue{% else %}text-orange{% endif %}">{{ item.label }}</div>
+            <div class="list-body">{{ item.detail }}</div>
+          </div>
+          {% endfor %}
+          <div class="cta-banner">
+            <span>📌 나중에 다시 보려면 게시물 저장 & 공유</span>
+            <span>💾 SAVE</span>
+          </div>
+        </div>
+
+      {# CASE 11: 기본 분석/불릿 리스트형 #}
+      {% else %}
+        {% for item in card['items'] %}
+        <div class="list-card {{ item.color or 'orange' }}">
+          <div class="list-head {% if item.color == 'blue' %}text-blue{% else %}text-orange{% endif %}">{{ item.label }}</div>
+          <div class="list-body">{{ item.detail }}</div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- 하단 코멘트/인사이트 (좌측 위주, 우측 하단 캐릭터 간섭 회피) -->
+    <div class="card-footer">
+      <div class="tip-text">💡 {{ card.footer_insight or '더 자세한 분석과 실시간 이슈는 오늘도국어에서 확인하세요.' }}</div>
+    </div>
+  </div>
+
+  <script>
+    function autoFitAllElements() {
+      // 1. hero-giant-num dynamic auto-shrink to prevent wrapping and fitting perfectly
+      document.querySelectorAll('.hero-giant-num').forEach(el => {
+        el.style.whiteSpace = 'nowrap';
+        const parent = el.closest('.hero-number-box');
+        if (!parent) return;
+
+        const parentWidth = parent.clientWidth || 920;
+        const textGroup = parent.querySelector('.hero-text-group');
+        const textGroupWidth = textGroup ? textGroup.offsetWidth : 350;
+        const maxAllowed = Math.max(260, parentWidth - textGroupWidth - 25);
+
+        let currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+        while ((el.offsetWidth > maxAllowed || el.scrollWidth > el.clientWidth) && currentSize > 36) {
+          currentSize -= 2;
+          el.style.fontSize = currentSize + 'px';
+        }
+      });
+
+      // 2. stat-primary dynamic auto-shrink
+      document.querySelectorAll('.stat-primary').forEach(el => {
+        el.style.whiteSpace = 'nowrap';
+        let currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+        while (el.offsetWidth > 420 && currentSize > 32) {
+          currentSize -= 2;
+          el.style.fontSize = currentSize + 'px';
+        }
+      });
+
+      // 3. comp-value dynamic auto-shrink
+      document.querySelectorAll('.comp-value').forEach(el => {
+        el.style.whiteSpace = 'nowrap';
+        let currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+        while (el.offsetWidth > 380 && currentSize > 32) {
+          currentSize -= 2;
+          el.style.fontSize = currentSize + 'px';
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', autoFitAllElements);
+    window.addEventListener('load', autoFitAllElements);
+  </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 4:5 전체 캔버스 (1080 x 1350) */
+  body {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Pretendard', sans-serif;
+    background-color: #0B132B;
+    {% if bg_image_path %}
+    background-image: url('{{ bg_image_path }}');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    {% else %}
+    background: linear-gradient(145deg, #0B132B 0%, #171E38 50%, #0F172A 100%);
+    {% endif %}
+    color: #FFFFFF;
+    word-break: keep-all;
+  }
+
+  /* 우측 상단 화이트 로고 (1080x1080 박스 바로 위) */
+  .header-logo {
+    position: absolute;
+    top: 70px;
+    right: 70px;
+    width: 200px;
+    z-index: 10;
+  }
+
+  /* 중앙 1080 x 1080 핵심 안전 영역 (상하 여백 135px) */
+  .safe-zone {
+    position: absolute;
+    top: 135px;
+    left: 0;
+    width: 1080px;
+    height: 1080px;
+    padding: 24px 70px 55px 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 5;
+  }
+
+  /* 상단 배지 */
+  .badge {
+    display: inline-block;
+    padding: 12px 28px;
+    background: #FF5A2B;
+    border-radius: 30px;
+    font-size: 28px;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+    box-shadow: 0 4px 20px rgba(255, 90, 43, 0.35);
+    max-width: 700px;
+  }
+
+  /* 메인 타이틀 영역 */
+  .title-section {
+    margin-top: 30px;
+    margin-bottom: auto;
+  }
+  .category-tag {
+    font-size: 30px;
+    font-weight: 700;
+    color: #00A3FF;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  }
+  .main-title {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1.24;
+    color: #FFFFFF;
+    letter-spacing: -1.8px;
+    word-break: keep-all;
+    text-shadow: 0 2px 15px rgba(0, 0, 0, 0.85);
+  }
+  .main-title .point-orange {
+    color: #FF5A2B;
+  }
+  .main-title .point-blue {
+    color: #00A3FF;
+  }
+  .sub-title {
+    margin-top: 20px;
+    font-size: 38px;
+    font-weight: 500;
+    color: #CBD5E1;
+    line-height: 1.40;
+    word-break: keep-all;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  }
+
+  /* 하단 핵심 프리뷰 카드 */
+  .preview-container {
+    background: rgba(15, 23, 42, 0.72);
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+    padding: 24px 36px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .preview-item {
+    font-size: 34px;
+    color: #FFFFFF;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .preview-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #FF5A2B;
+    flex-shrink: 0;
+  }
+
+  /* 하단 넘김 유도 (Swipe CTA) */
+  .footer-cta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    padding-top: 20px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+  .brand-text {
+    font-size: 28px;
+    color: #CBD5E1;
+    font-weight: 700;
+  }
+  .brand-text .brand-korean {
+    color: #C74417;
+    font-weight: 800;
+  }
+  .swipe-btn {
+    font-size: 32px;
+    font-weight: 700;
+    color: #00A3FF;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+</style>
+</head>
+<body>
+  <!-- 우측 상단 화이트 로고 (파일 없을 시 깨지지 않도록 onerror 처리) -->
+  <img src="{{ logo_path }}" alt="로고" class="header-logo" onerror="this.style.display='none'">
+
+  <div class="safe-zone">
+    <div>
+      <div class="badge">{{ card.badge }}</div>
+      
+      <div class="title-section">
+        <div class="category-tag">
+          <span>●</span> {{ card.category_tag or ((card.badge|replace('⚡','')|replace('🔥','')|replace('🚨','')|replace('📢','')|trim) ~ ' 분석') if card.badge else '이슈 심층 분석' }}
+        </div>
+        <h1 class="main-title">{{ card.title | replace('\\n', '<br>') | replace('\n', '<br>') | safe }}</h1>
+        {% if card.subtitle %}
+        <p class="sub-title">{{ card.subtitle }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if card.get('items') and card['items']|length > 0 %}
+    <div class="preview-container">
+      {% for item in card['items'] %}
+      <div class="preview-item">
+        <span class="preview-dot"></span>
+        <span>{{ item.label }}{% if item.value %}: <strong>{{ item.value }}</strong>{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="footer-cta">
+      {% set raw_brand = card.brand_report_name or ('오늘도국어학원 입시 리포트' if ('입시' in (card.category_tag or '') or '수시' in (card.category_tag or '') or '대입' in (card.category_tag or '') or '수능' in (card.category_tag or '')) else '오늘도국어학원 트렌드 리포트') %}
+      {% set normalized_brand = raw_brand.replace('오늘도국어학원', '오늘도국어').replace('오늘도국어', '오늘도국어학원') %}
+      <span class="brand-text">{{ normalized_brand.replace('국어', '<span class="brand-korean">국어</span>') | safe }}</span>
+      <span class="swipe-btn">밀어서 분석 보기 ➔</span>
+    </div>
+  </div>
+</body>
+</html>

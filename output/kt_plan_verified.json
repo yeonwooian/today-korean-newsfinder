@@ -1,0 +1,203 @@
+{
+  "total_pages": 6,
+  "cards": [
+    {
+      "card_number": 1,
+      "badge": "IT/AI 대격변 ⚡",
+      "category_tag": "국산 AI 생태계 분석",
+      "brand_report_name": "오늘도국어 트렌드 리포트",
+      "title": "다음·무신사·직방이 하나로? 6천만 이용자 묶는 AI 에이전트의 등장",
+      "subtitle": "KT 컨소시엄이 공개한 '모두의 AI' 핵심 전략 분석",
+      "layout_type": "cover",
+      "items": [],
+      "footer_insight": "실생활 앱과 직접 연결되는 대국민 AI 서비스의 변화를 살핍니다."
+    },
+    {
+      "card_number": 2,
+      "badge": "핵심 파급력 📊",
+      "category_tag": null,
+      "brand_report_name": null,
+      "title": "6,000만 명의 접점을 잇는 거대 AI 개방형 생태계",
+      "subtitle": "포털·금융·쇼핑·부동산을 아우르는 16개사 연합",
+      "layout_type": "hero_stat",
+      "items": [
+        {
+          "label": "총 서비스 접점",
+          "value": "6,000만+ 서비스 접점",
+          "sub": "참여사 서비스 총합",
+          "detail": "다음, 무신사, 직방, EBS, BC카드 등 대규모 이용자 기반 서비스 연동",
+          "highlight": "orange",
+          "sub_highlight": "blue",
+          "color": "orange"
+        },
+        {
+          "label": "컨소시엄 규모",
+          "value": "16개사 연합",
+          "sub": "국내 주요 IT·AI 기업",
+          "detail": "국내 AI·인프라 및 서비스 전문 기업들이 전격 협력",
+          "highlight": "blue",
+          "sub_highlight": null,
+          "color": "blue"
+        }
+      ],
+      "footer_insight": "일상에서 자주 쓰는 앱 속으로 AI 서비스가 직접 찾아옵니다."
+    },
+    {
+      "card_number": 3,
+      "badge": "혁신 핵심 기술 💡",
+      "category_tag": null,
+      "brand_report_name": null,
+      "title": "일방적 연결은 끝! 양방향 연결 '이음 인사이드'",
+      "subtitle": "서비스 내부에서 작동하는 차세대 AI 구조",
+      "layout_type": "list",
+      "items": [
+        {
+          "label": "양방향 서비스 탑재",
+          "value": null,
+          "sub": null,
+          "detail": "외부 앱 이동 없이 이용 중인 서비스 안에서 직접 검색·추천 요청",
+          "highlight": "blue",
+          "sub_highlight": null,
+          "color": "blue"
+        },
+        {
+          "label": "실생활 맞춤형 액션",
+          "value": null,
+          "sub": null,
+          "detail": "단순 정보 조회를 넘어 부동산 매물 검색, 상품 비교·추천까지 한 번에 수행",
+          "highlight": "orange",
+          "sub_highlight": null,
+          "color": "orange"
+        },
+        {
+          "label": "개방형 생태계 확장",
+          "value": null,
+          "sub": null,
+          "detail": "컨소시엄 외 기업에도 이음 인사이드를 개방해 참여를 지속 확대할 계획",
+          "highlight": null,
+          "sub_highlight": null,
+          "color": null
+        }
+      ],
+      "footer_insight": "평소 쓰던 앱에서 바로 AI 액션을 실행할 수 있게 됩니다."
+    },
+    {
+      "card_number": 4,
+      "badge": "기술 분업 체계 🧩",
+      "category_tag": null,
+      "brand_report_name": null,
+      "title": "국산 AI 모델 4사 4색, 분야별 맞춤 배치",
+      "subtitle": "강점에 맞춘 멀티모달·특화 모델 연합",
+      "layout_type": "grid",
+      "items": [
+        {
+          "label": "업스테이지",
+          "value": "추론 & 에이전트",
+          "sub": null,
+          "detail": "복잡한 추론 및 서비스 간 에이전트 연동 담당",
+          "highlight": "blue",
+          "sub_highlight": null,
+          "color": "blue"
+        },
+        {
+          "label": "모티프테크놀로지스",
+          "value": "긴 컨텍스트 처리",
+          "sub": null,
+          "detail": "방대한 문맥 및 긴 데이터의 정밀 분석 전담",
+          "highlight": "orange",
+          "sub_highlight": null,
+          "color": "orange"
+        },
+        {
+          "label": "NC AI",
+          "value": "3D & 사운드",
+          "sub": null,
+          "detail": "입체 그래픽 및 사운드·음성 기술 특화",
+          "highlight": "blue",
+          "sub_highlight": null,
+          "color": "blue"
+        },
+        {
+          "label": "리벨리온·솔트룩스 등",
+          "value": "인프라 & 파이프라인",
+          "sub": null,
+          "detail": "AI 반도체 인프라 및 지식 파이프라인 연계 지원",
+          "highlight": "orange",
+          "sub_highlight": null,
+          "color": "orange"
+        }
+      ],
+      "footer_insight": "각 기업의 강점 모델을 융합하여 서비스 최적화를 이룹니다."
+    },
+    {
+      "card_number": 5,
+      "badge": "운영 & 보안 인프라 ⚙️",
+      "category_tag": null,
+      "brand_report_name": null,
+      "title": "'토큰팩토리'로 효율 UP, 공공·보안까지 강화",
+      "subtitle": "KT AI 인프라 플랫폼 중심의 안정적 운용",
+      "layout_type": "list",
+      "items": [
+        {
+          "label": "AI 운영 플랫폼 '토큰팩토리'",
+          "value": null,
+          "sub": null,
+          "detail": "프리필·디코드 분리 및 프롬프트 압축으로 AI 운영 효율 극대화",
+          "highlight": "orange",
+          "sub_highlight": null,
+          "color": "orange"
+        },
+        {
+          "label": "개인화 공공 혜택 알림",
+          "value": null,
+          "sub": null,
+          "detail": "단순 질의응답을 넘어 맞춤형 혜택 정보 선제 안내, 영농·창업 영역 확대",
+          "highlight": "blue",
+          "sub_highlight": null,
+          "color": "blue"
+        },
+        {
+          "label": "철저한 개인정보 보안",
+          "value": null,
+          "sub": null,
+          "detail": "개인정보보호위원회 협의 및 참여사 간 보안 체계 공유로 안정성 강화",
+          "highlight": null,
+          "sub_highlight": null,
+          "color": null
+        }
+      ],
+      "footer_insight": "강력한 보안과 효율적인 플랫폼 기술로 안정성을 높입니다."
+    },
+    {
+      "card_number": 6,
+      "badge": "최종 분석 & CTA 📌",
+      "category_tag": null,
+      "brand_report_name": null,
+      "title": "국산 AI 개방형 생태계, 우리 일상을 어떻게 바꿀까?",
+      "subtitle": "디지털 포용과 실생활 편의성 확대를 기대하며",
+      "layout_type": "conclusion",
+      "items": [
+        {
+          "label": "실생활 맞춤 액션 중심",
+          "value": null,
+          "sub": null,
+          "detail": "쇼핑, 부동산, 금융 등 일상 서비스와 직접 연동되어 정확한 결과 제공",
+          "highlight": "blue",
+          "sub_highlight": null,
+          "color": "blue"
+        },
+        {
+          "label": "디지털 소외계층 포용",
+          "value": null,
+          "sub": null,
+          "detail": "6,000만 접점을 활용해 누구에게나 쉽고 친숙한 대국민 AI 지향",
+          "highlight": "orange",
+          "sub_highlight": null,
+          "color": "orange"
+        }
+      ],
+      "footer_insight": "도움이 되셨다면 저장과 좋아요, 댓글로 의견을 남겨주세요!"
+    }
+  ],
+  "instagram_caption": "🤖 다음, 무신사, 직방에서 AI를 바로 쓴다? KT '모두의 AI' 핵심 정리!\n\n국산 AI 기술과 16개 대표 서비스가 하나로 뭉친 '이음 인사이드' 전략이 공개되었습니다. 6천만 이용자 접점을 연결하는 이번 프로젝트의 핵심 포인트를 정리해 드립니다.\n\n📌 핵심 요약 3줄\n1️⃣ 6,000만 명 이상의 서비스 접점을 잇는 대국민 AI 개방형 생태계 구축\n2️⃣ 업스테이지, NC AI 등 국산 전문 AI 모델을 적재적소에 배치해 최적화\n3️⃣ '토큰팩토리' 플랫폼 기반의 높은 효율성과 강력한 개인정보 보안 체계 확보\n\n💬 자주 쓰는 서비스에서 AI 기능이 바로 작동한다면 여러분은 어떤 기능을 가장 먼저 써보고 싶으신가요? 댓글로 공유해주세요!\n\n#오늘도국어 #KT모두의AI #이음인사이드 #토큰팩토리 #국산AI #AI에이전트 #IT트렌드 #AI기술 #테크이슈 #인공지능서비스 #디지털혁신"
+}

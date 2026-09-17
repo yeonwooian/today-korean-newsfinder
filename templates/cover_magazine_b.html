@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    color: #FFFFFF;
+    word-break: keep-all;
+    background: #071A28;
+  }
+
+  /* 배경 이미지 + 아주 옅은 딥 오셔닉 페트롤 틸 그라데이션 필터 (배경 하단 가시성 확보) */
+  .bg-layer {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(180deg, 
+        rgba(7, 26, 40, 0.40) 0%, 
+        rgba(7, 26, 40, 0.15) 30%, 
+        rgba(7, 26, 40, 0.10) 65%, 
+        rgba(7, 26, 40, 0.25) 100%),
+      url('{{ bg_image_path }}');
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+  }
+
+  /* DISCOVER 스타일 외부 액센트 테두리 라인 */
+  .frame-border {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .frame-corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: #FF5A2B;
+    border-style: solid;
+  }
+  .fc-tl { top: -1px; left: -1px; border-width: 3px 0 0 3px; }
+  .fc-tr { top: -1px; right: -1px; border-width: 3px 3px 0 0; }
+  .fc-bl { bottom: -1px; left: -1px; border-width: 0 0 3px 3px; }
+  .fc-br { bottom: -1px; right: -1px; border-width: 0 3px 3px 0; }
+
+  /* 우측 상단 로고 (동일 위치) */
+  .header-logo {
+    position: absolute;
+    top: 65px;
+    right: 70px;
+    width: 200px;
+    z-index: 10;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+  }
+
+  /* 좌측 상단 마스트헤드 박스 (DISCOVER 옐로우/오렌지 박스 모티브) */
+  .discover-masthead {
+    position: absolute;
+    top: 60px;
+    left: 70px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .masthead-badge {
+    border: 3px solid #FF5A2B;
+    padding: 6px 14px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: 2px;
+    background: rgba(255, 90, 43, 0.18);
+  }
+  .masthead-edition {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #FF5A2B;
+    letter-spacing: 1px;
+    display: flex;
+    flex-direction: column;
+  }
+  .masthead-edition span { color: #94A3B8; font-size: 11px; }
+
+  /* 1080x1080 안전영역 */
+  .safe-canvas {
+    position: absolute;
+    top: 135px;
+    left: 0;
+    width: 1080px;
+    height: 1080px;
+    padding: 30px 70px 45px 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 5;
+  }
+
+  /* 타이틀 섹션 (오른쪽 정렬) */
+  .title-block {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .topic-tag {
+    display: inline-block;
+    padding: 6px 18px;
+    background: rgba(0, 163, 255, 0.2);
+    border: 1px solid #00A3FF;
+    border-radius: 4px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #38BDF8;
+    letter-spacing: 0.5px;
+    margin-bottom: 18px;
+  }
+  
+  .super-title {
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1.16;
+    letter-spacing: -2px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95);
+    text-align: right;
+  }
+  .super-title .focus-word {
+    color: #FF5A2B;
+    text-shadow: 0 0 25px rgba(255, 90, 43, 0.5);
+  }
+  .super-title .accent-cyan {
+    color: #00A3FF;
+  }
+
+  .deck-desc {
+    margin-top: 20px;
+    font-size: 34px;
+    font-weight: 600;
+    color: #E2E8F0;
+    line-height: 1.4;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    text-align: right;
+  }
+
+  /* DISCOVER 스타일 'PLUS' 에디토리얼 프리뷰 박스 (페이지 번호 태그 제외) */
+  .plus-feature-box {
+    background: rgba(7, 26, 40, 0.88);
+    border: 1.5px solid rgba(255, 90, 43, 0.5);
+    backdrop-filter: blur(18px);
+    border-radius: 18px;
+    padding: 24px 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+  .plus-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 10px;
+  }
+  .plus-badge {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: #FF5A2B;
+    letter-spacing: 1px;
+  }
+  .plus-kicker-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: #94A3B8;
+  }
+  .plus-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .plus-item {
+    font-size: 26px;
+    font-weight: 600;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .plus-arrow {
+    color: #FF5A2B;
+    font-weight: 900;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .plus-label {
+    color: #CBD5E1;
+    font-weight: 500;
+  }
+  .plus-val {
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+
+  /* 푸터 */
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+    padding-top: 18px;
+  }
+  .brand-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #CBD5E1;
+  }
+  .brand-korean {
+    color: #C74417;
+    font-weight: 800;
+  }
+  .swipe-btn {
+    font-size: 30px;
+    font-weight: 800;
+    color: #FF5A2B;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 0 16px rgba(255, 90, 43, 0.4);
+  }
+</style>
+</head>
+<body>
+  <div class="bg-layer"></div>
+  
+  <div class="frame-border">
+    <div class="frame-corner fc-tl"></div>
+    <div class="frame-corner fc-tr"></div>
+    <div class="frame-corner fc-bl"></div>
+    <div class="frame-corner fc-br"></div>
+  </div>
+
+  <!-- 우측 상단 오늘도국어학원 로고 (고정 위치) -->
+  <img src="{{ logo_path }}" alt="오늘도국어학원 로고" class="header-logo" onerror="this.style.display='none'">
+
+  <!-- 좌측 상단 DISCOVER 스타일 마스트헤드 박스 -->
+  <div class="discover-masthead">
+    <div class="masthead-badge">REPORT</div>
+    <div class="masthead-edition">
+      <span>TODAY KOREAN</span>
+      {{ current_date_str or 'SPECIAL ISSUE' }}
+    </div>
+  </div>
+
+  <div class="safe-canvas">
+    <!-- 메인 타이틀 블록 -->
+    <div class="title-block">
+      <div class="topic-tag">● {{ card.category_tag or 'GLOBAL REPORT' }}</div>
+      
+      {% if card.title_html %}
+        <h1 class="super-title">{{ card.title_html | safe }}</h1>
+      {% else %}
+        <h1 class="super-title">
+          {{ card.title | replace('\n', '<br>') | safe }}
+        </h1>
+      {% endif %}
+
+      {% if card.subtitle %}
+      <p class="deck-desc">{{ card.subtitle }}</p>
+      {% endif %}
+    </div>
+
+    <!-- DISCOVER 스타일 PLUS 프리뷰 박스 (페이지 번호 태그 제외) -->
+    {% if card.get('items') and card['items']|length > 0 %}
+    <div class="plus-feature-box">
+      <div class="plus-title-row">
+        <span class="plus-badge">PLUS</span>
+        <span class="plus-kicker-text">INSIDE THIS ISSUE • 핵심 브리핑</span>
+      </div>
+      <div class="plus-list">
+        {% for item in card['items'] %}
+        <div class="plus-item">
+          <span class="plus-arrow">➔</span>
+          <span class="plus-label">{{ item.label }}:</span>
+          <span class="plus-val">{{ item.value or item.detail or '' }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 푸터 바 -->
+    <div class="footer-row">
+      {% set raw_brand = card.brand_report_name or ('오늘도국어학원 입시 리포트' if ('입시' in (card.category_tag or '') or '수시' in (card.category_tag or '') or '대입' in (card.category_tag or '') or '수능' in (card.category_tag or '')) else '오늘도국어학원 트렌드 리포트') %}
+      {% set normalized_brand = raw_brand.replace('오늘도국어학원', '오늘도국어').replace('오늘도국어', '오늘도국어학원') %}
+      <div class="brand-title">{{ normalized_brand.replace('국어', '<span class="brand-korean">국어</span>') | safe }}</div>
+      <div class="swipe-btn">밀어서 분석 보기 ➔</div>
+    </div>
+  </div>
+</body>
+</html>

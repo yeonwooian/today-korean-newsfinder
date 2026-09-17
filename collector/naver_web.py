@@ -2,8 +2,7 @@
 collector/naver_web.py
 ----------------------
 네이버 뉴스 전용 수집 및 스크래퍼 모듈.
-사용자 요구사항에 따라 100% 네이버 뉴스(n.news.naver.com / news.naver.com) 주소를 가진
-기사만을 엄격하게 검색·수집하여 '오늘도국어' 인스타 파이프라인과의 완벽한 연계를 보장합니다.
+100% 네이버 뉴스(n.news.naver.com / news.naver.com) 주소를 가진 기사만을 엄격하게 검색·수집합니다.
 (PC 검색 403 방지를 위한 모바일 뉴스 검색 자동 폴백 지원)
 """
 
@@ -43,7 +42,7 @@ def search_naver_news_only(
 ) -> list[dict]:
     """
     네이버 검색에서 '네이버뉴스' 인링크(n.news.naver.com)가 제공되는 기사만 선별 수집합니다.
-    PC 및 모바일 검색을 결합하여 403 차단 없이 100% 안정적으로 수집합니다.
+    PC 및 모바일 검색을 결합하여 403 차단 없이 안정적으로 수집합니다.
     """
     if target_date is None:
         target_date = datetime.now() - timedelta(days=1)
@@ -61,7 +60,7 @@ def search_naver_news_only(
 
     articles = _fetch_from_url(url_date_filtered, is_mobile=False)
 
-    # 2. 결과가 부족하면 모바일 뉴스 검색으로 수집 (모바일은 403 차단이 없음)
+    # 2. 결과가 부족하면 모바일 뉴스 검색으로 수집
     if len(articles) < max_results:
         m_url = f"https://m.search.naver.com/search.naver?where=m_news&query={encoded_query}&sm=mtb_jum&sort=0"
         m_articles = _fetch_from_url(m_url, is_mobile=True)
