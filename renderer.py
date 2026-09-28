@@ -40,9 +40,18 @@ def get_font_data_uri(file_path: pathlib.Path) -> str:
         return _FONT_CACHE[path_str]
     if not file_path.exists():
         return ""
+    suffix = file_path.suffix.lower()
+    if suffix == ".woff2":
+        mime = "font/woff2"
+    elif suffix == ".woff":
+        mime = "font/woff"
+    elif suffix == ".otf":
+        mime = "font/otf"
+    else:
+        mime = "font/truetype"
     with open(file_path, "rb") as f:
         data = base64.b64encode(f.read()).decode("utf-8")
-    uri = f"data:font/truetype;charset=utf-8;base64,{data}"
+    uri = f"data:{mime};charset=utf-8;base64,{data}"
     _FONT_CACHE[path_str] = uri
     return uri
 
@@ -145,6 +154,9 @@ def render_cardnews(
     bg_lee_uri = get_image_data_uri(bg_dir / "오늘도국어_이T.jpg")
     bg_cho_uri = get_image_data_uri(bg_dir / "오늘도국어_조T.jpg")
     font_aggro_uri = get_font_data_uri(base_dir / "font" / "SB 어그로 B.ttf")
+    font_pretendard_regular_uri = get_font_data_uri(base_dir / "font" / "Pretendard-Regular.woff2")
+    font_pretendard_medium_uri = get_font_data_uri(base_dir / "font" / "Pretendard-Medium.woff2")
+    font_pretendard_bold_uri = get_font_data_uri(base_dir / "font" / "Pretendard-Bold.woff2")
     newspaper_transparent_uri = get_image_data_uri(bg_dir / "newspaper_transparent.png")
     news_photo_sample_uri = get_image_data_uri(bg_dir / "news_photo_sample.jpg")
 
@@ -235,7 +247,11 @@ def render_cardnews(
                     total_pages=total_pages,
                     logo_path=logo_white_uri,
                     bg_image_path=cover_bg_uri,
-                    current_date_str=current_date_str
+                    current_date_str=current_date_str,
+                    font_aggro_uri=font_aggro_uri,
+                    font_pretendard_regular_uri=font_pretendard_regular_uri,
+                    font_pretendard_medium_uri=font_pretendard_medium_uri,
+                    font_pretendard_bold_uri=font_pretendard_bold_uri
                 )
             else:
                 if body_style == "blackboard":
@@ -277,6 +293,9 @@ def render_cardnews(
                         logo_path=logo_white_uri,
                         logo_black_path=logo_black_uri,
                         font_aggro_uri=font_aggro_uri,
+                        font_pretendard_regular_uri=font_pretendard_regular_uri,
+                        font_pretendard_medium_uri=font_pretendard_medium_uri,
+                        font_pretendard_bold_uri=font_pretendard_bold_uri,
                         chalk_tray=chalk_tray,
                         doodle_colors=doodle_colors
                     )
@@ -287,6 +306,9 @@ def render_cardnews(
                         logo_path=logo_white_uri,
                         logo_black_path=logo_black_uri,
                         font_aggro_uri=font_aggro_uri,
+                        font_pretendard_regular_uri=font_pretendard_regular_uri,
+                        font_pretendard_medium_uri=font_pretendard_medium_uri,
+                        font_pretendard_bold_uri=font_pretendard_bold_uri,
                         newspaper_img_uri=newspaper_transparent_uri,
                         photo_img_uri=news_photo_sample_uri
                     )
@@ -297,12 +319,20 @@ def render_cardnews(
                         card=card_copy,
                         total_pages=total_pages,
                         bg_image_path=current_bg,
-                        logo_path=logo_white_uri
+                        logo_path=logo_white_uri,
+                        font_aggro_uri=font_aggro_uri,
+                        font_pretendard_regular_uri=font_pretendard_regular_uri,
+                        font_pretendard_medium_uri=font_pretendard_medium_uri,
+                        font_pretendard_bold_uri=font_pretendard_bold_uri
                     )
 
             # HTML 주입 및 웹폰트/이미지 로딩 대기
             page.set_content(html_content, wait_until="load")
-            page.wait_for_timeout(300) # 폰트 렌더링 안정화 300ms
+            try:
+                page.evaluate("() => document.fonts.ready")
+            except Exception:
+                pass
+            page.wait_for_timeout(200) # 폰트 렌더링 안정화 200ms
             page.evaluate("if (typeof autoFitAllElements === 'function') autoFitAllElements();")
 
             output_file = out_path_dir / f"card_{c_num}.png"
