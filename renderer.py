@@ -31,6 +31,43 @@ def get_image_data_uri(file_path: pathlib.Path) -> str:
         data = base64.b64encode(f.read()).decode("utf-8")
     return f"data:{mime};base64,{data}"
 
+_FONT_CACHE: Dict[str, str] = {}
+
+def get_font_data_uri(file_path: pathlib.Path) -> str:
+    """로컬 폰트 파일을 CSS @font-face 용 base64 data URI로 변환"""
+    path_str = str(file_path.resolve())
+    if path_str in _FONT_CACHE:
+        return _FONT_CACHE[path_str]
+    if not file_path.exists():
+        return ""
+    with open(file_path, "rb") as f:
+        data = base64.b64encode(f.read()).decode("utf-8")
+    uri = f"data:font/truetype;charset=utf-8;base64,{data}"
+    _FONT_CACHE[path_str] = uri
+    return uri
+
+CHALK_STICK_COLORS = [
+    "#FFB38A",  # 피치
+    "#A2D6E6",  # 스카이블루
+    "#FDE887",  # 레몬 옐로우
+    "#FFAAA6",  # 소프트 코랄핑크
+    "#A8E6CF",  # 민트 그린
+    "#D0BFFF",  # 라벤더 바이올렛
+    "#FFBE76",  # 탠저린 오렌지
+    "#F0F2F5",  # 분필 화이트
+    "#FFD166",  # 골든 옐로우
+    "#74C0FC",  # 파스텔 블루
+    "#FFCAD4",  # 파우더 핑크
+]
+
+DOODLE_STAR_COLORS = [
+    "#FDE887", "#A2D6E6", "#FFAAA6", "#A8E6CF", "#D0BFFF", "#FFBE76", "#FFD166"
+]
+
+DOODLE_ELLIPSE_COLORS = [
+    "#A2D6E6", "#FDE887", "#FFAAA6", "#A8E6CF", "#D0BFFF", "#FFB38A"
+]
+
 def format_magazine_title(title: str, style: str = "magazine_a") -> str:
     """매거진 커버용 헤드라인 자동 하이라이트 포맷터"""
     if not title:
@@ -79,7 +116,8 @@ def render_cardnews(
     plan_data: Dict[str, Any], 
     output_dir: str = "output",
     cover_bg_filename: Optional[str] = None,
-    cover_style: Optional[str] = None
+    cover_style: Optional[str] = None,
+    body_style: str = "dark_signature"
 ) -> List[str]:
     """
     AI 기획 데이터(JSON)를 기반으로 1080x1350 고화질 카드뉴스 PNG 이미지들을 렌더링합니다.
@@ -88,6 +126,7 @@ def render_cardnews(
     :param output_dir: 결과 이미지를 저장할 디렉터리 경로
     :param cover_bg_filename: 특정 표지 배경 이미지 지정 (예: '02.png', None이면 랜덤)
     :param cover_style: 표지 스타일 ('classic', 'magazine_a', 'magazine_b', None이면 무작위 추첨)
+    :param body_style: 본문 레이아웃 스타일 ('dark_signature' 또는 'blackboard')
     :return: 생성된 이미지 파일 경로 리스트
     """
     base_dir = pathlib.Path(__file__).parent.resolve()
@@ -105,6 +144,9 @@ def render_cardnews(
     logo_black_uri = get_image_data_uri(bg_dir / "logo_black.png")
     bg_lee_uri = get_image_data_uri(bg_dir / "오늘도국어_이T.jpg")
     bg_cho_uri = get_image_data_uri(bg_dir / "오늘도국어_조T.jpg")
+    font_aggro_uri = get_font_data_uri(base_dir / "font" / "SB 어그로 B.ttf")
+    newspaper_transparent_uri = get_image_data_uri(bg_dir / "newspaper_transparent.png")
+    news_photo_sample_uri = get_image_data_uri(bg_dir / "news_photo_sample.jpg")
 
     # 01.png ~ 99.png 중 배경 이미지 선택
     cover_bg_candidates = [
@@ -129,12 +171,14 @@ def render_cardnews(
         "magazine_a": env.get_template("cover_magazine_a.html"),
         "magazine_b": env.get_template("cover_magazine_b.html")
     }
-    card_tmpl = env.get_template("card_template.html")
+    card_tmpl_dark = env.get_template("card_template.html")
+    card_tmpl_blackboard = env.get_template("card_blackboard.html") if (templates_dir / "card_blackboard.html").exists() else card_tmpl_dark
+    card_tmpl_newspaper = env.get_template("card_newspaper.html") if (templates_dir / "card_newspaper.html").exists() else card_tmpl_dark
 
     # 3가지 표지 스타일 중 무작위 선택 (또는 명시적 지정)
     chosen_cover_style = cover_style or random.choice(["classic", "magazine_a", "magazine_b"])
     chosen_cover_tmpl = cover_templates.get(chosen_cover_style, cover_templates["classic"])
-    print(f"[*] 표지(Card 1) 디자인 스타일 적용: '{chosen_cover_style}'")
+    print(f"[*] 표지(Card 1) 디자인 스타일 적용: '{chosen_cover_style}' | 본문 스타일: '{body_style}'")
 
     import datetime
     current_date_str = datetime.datetime.now().strftime("%Y.%m.%d BRIEFING")
@@ -169,12 +213,22 @@ def render_cardnews(
 
         for card in cards:
             c_num = card["card_number"]
-            is_cover = (c_num == 1) or (card.get("layout_type") == "cover")
+            is_cover = (c_num == 1 and card.get("layout_type") == "cover") or (card.get("layout_type") == "cover")
+
+            # Jinja2 dict.items 충돌 방지 및 안전한 items 리스트 보장
+            card_copy = dict(card)
+            raw_items = card_copy.get("items")
+            if not isinstance(raw_items, list):
+                if card_copy.get("desc"):
+                    card_copy["items"] = [{"label": card_copy.get("subtitle") or "핵심 분석", "detail": card_copy["desc"]}]
+                else:
+                    card_copy["items"] = [{"label": card_copy.get("subtitle") or "핵심 요약", "detail": ""}]
+            elif len(raw_items) == 0:
+                card_copy["items"] = [{"label": card_copy.get("subtitle") or "핵심 요약", "detail": card_copy.get("desc") or ""}]
 
             if is_cover:
-                card_copy = dict(card)
                 if chosen_cover_style in ["magazine_a", "magazine_b"]:
-                    card_copy["title_html"] = format_magazine_title(card.get("title", ""), style=chosen_cover_style)
+                    card_copy["title_html"] = format_magazine_title(card_copy.get("title", ""), style=chosen_cover_style)
 
                 html_content = chosen_cover_tmpl.render(
                     card=card_copy,
@@ -184,14 +238,67 @@ def render_cardnews(
                     current_date_str=current_date_str
                 )
             else:
-                # 본문 배경은 조T -> 이T 순으로 교대 적용 (Card 2: 조T, Card 3: 이T, Card 4: 조T ...)
-                current_bg = bg_cho_uri if (c_num % 2 == 0) else bg_lee_uri
-                html_content = card_tmpl.render(
-                    card=card,
-                    total_pages=total_pages,
-                    bg_image_path=current_bg,
-                    logo_path=logo_white_uri
-                )
+                if body_style == "blackboard":
+                    left_count = random.choice([2, 3])
+                    right_count = random.choice([2, 3])
+                    total_needed = left_count + right_count
+                    sample_colors = random.sample(CHALK_STICK_COLORS, min(total_needed, len(CHALK_STICK_COLORS)))
+                    if len(sample_colors) < total_needed:
+                        sample_colors += [random.choice(CHALK_STICK_COLORS) for _ in range(total_needed - len(sample_colors))]
+                    random.shuffle(sample_colors)
+                    left_chalks = [
+                        {
+                            "color": sample_colors[i],
+                            "width": random.randint(48, 85),
+                            "height": random.randint(16, 20),
+                            "radius": f"{random.randint(3, 5)}px {random.randint(3, 5)}px {random.randint(1, 3)}px {random.randint(1, 3)}px"
+                        }
+                        for i in range(left_count)
+                    ]
+                    right_chalks = [
+                        {
+                            "color": sample_colors[left_count + i],
+                            "width": random.randint(45, 90),
+                            "height": random.randint(16, 20),
+                            "radius": f"{random.randint(3, 5)}px {random.randint(3, 5)}px {random.randint(1, 3)}px {random.randint(1, 3)}px"
+                        }
+                        for i in range(right_count)
+                    ]
+                    chalk_tray = {"left": left_chalks, "right": right_chalks}
+                    doodle_colors = {
+                        "ellipse": random.choice(DOODLE_ELLIPSE_COLORS),
+                        "star_left": random.choice(DOODLE_STAR_COLORS),
+                        "star_right": random.choice(DOODLE_STAR_COLORS),
+                        "underline": random.choice(["rgba(255, 255, 255, 0.75)", "#FDE887", "#A2D6E6", "#FFAAA6", "#A8E6CF", "#FFBE76"]),
+                    }
+                    html_content = card_tmpl_blackboard.render(
+                        card=card_copy,
+                        total_pages=total_pages,
+                        logo_path=logo_white_uri,
+                        logo_black_path=logo_black_uri,
+                        font_aggro_uri=font_aggro_uri,
+                        chalk_tray=chalk_tray,
+                        doodle_colors=doodle_colors
+                    )
+                elif body_style == "newspaper":
+                    html_content = card_tmpl_newspaper.render(
+                        card=card_copy,
+                        total_pages=total_pages,
+                        logo_path=logo_white_uri,
+                        logo_black_path=logo_black_uri,
+                        font_aggro_uri=font_aggro_uri,
+                        newspaper_img_uri=newspaper_transparent_uri,
+                        photo_img_uri=news_photo_sample_uri
+                    )
+                else: # dark_signature
+                    # 본문 배경은 조T -> 이T 순으로 교대 적용 (Card 2: 조T, Card 3: 이T, Card 4: 조T ...)
+                    current_bg = bg_cho_uri if (c_num % 2 == 0) else bg_lee_uri
+                    html_content = card_tmpl_dark.render(
+                        card=card_copy,
+                        total_pages=total_pages,
+                        bg_image_path=current_bg,
+                        logo_path=logo_white_uri
+                    )
 
             # HTML 주입 및 웹폰트/이미지 로딩 대기
             page.set_content(html_content, wait_until="load")

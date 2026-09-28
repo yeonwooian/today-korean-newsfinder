@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @font-face {
+    font-family: 'SBAggroB';
+    src: url('{{ font_aggro_uri }}') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+  }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    width: 1080px;
+    height: 1350px;
+    background-color: #F8F7F4;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    color: #1A1A1A;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 70px 75px 60px 75px;
+  }
+
+  /* 상단 포인트 오렌지/테라코타 라인 */
+  .top-accent-line {
+    width: 100%;
+    height: 7px;
+    background-color: #D84315;
+    border-radius: 2px;
+    margin-bottom: 30px;
+    flex-shrink: 0;
+  }
+
+  /* 헤더 영역 */
+  .news-header {
+    margin-bottom: 16px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
+  }
+
+  .news-category-tag {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: #D84315;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+
+  .news-main-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 58px;
+    font-weight: 700;
+    color: #1A1A1A;
+    line-height: 1.24;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+    display: block;
+    word-break: keep-all;
+  }
+
+  .news-header.header-with-graphic {
+    max-width: 610px;
+  }
+
+  /* 우측 상단 신문 그래픽 오브젝트 */
+  .newspaper-top-graphic {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 340px;
+    height: auto;
+    z-index: 25;
+    pointer-events: none;
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12));
+  }
+
+  /* 본문 영역 */
+  .news-body-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 14px;
+    position: relative;
+    z-index: 4;
+    margin-bottom: 40px;
+  }
+
+  /* 하단 푸터 바 (@todaykorean5195 + 수평선) */
+  .news-footer {
+    position: absolute;
+    bottom: 50px;
+    left: 75px;
+    right: 75px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    z-index: 10;
+  }
+
+  .footer-handle {
+    font-family: 'Pretendard', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: #6B5B52;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .footer-line {
+    flex: 1;
+    height: 2px;
+    background-color: #D5CEC7;
+  }
+
+  /* ========================================================
+     1. news_photo / 포토 뉴스형 (레퍼런스 1번)
+     ======================================================== */
+  .layout-news-photo-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .news-photo-img-box {
+    width: 100%;
+    height: 440px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    background-color: #EAE6DF;
+  }
+
+  .news-photo-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .news-photo-desc-box {
+    font-size: 28px;
+    line-height: 1.68;
+    color: #44403C;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ========================================================
+     2. news_callout / 핵심 강조 배지 & 2단 문단형 (레퍼런스 2번)
+     ======================================================== */
+  .layout-news-callout-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .news-callout-badge {
+    background-color: #FBECE4;
+    color: #D84315;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    padding: 16px 30px;
+    border-radius: 12px;
+    margin-bottom: 34px;
+    display: inline-block;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+  }
+
+  .news-callout-paragraphs {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .news-callout-p {
+    font-size: 29px;
+    line-height: 1.70;
+    color: #44403C;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+
+  /* ========================================================
+     3. news_topics / TODAY'S TOPICS 4단 컬럼형 (레퍼런스 4번)
+     ======================================================== */
+  .layout-news-topics-wrap {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 10px;
+  }
+
+  .topic-column-card {
+    background-color: #FBECE4;
+    border-radius: 16px;
+    padding: 32px 12px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 440px;
+  }
+
+  .topic-icon-wrap {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: #1A1A1A;
+  }
+
+  .topic-title-en {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+  }
+
+  .topic-desc-kr {
+    font-size: 22px;
+    line-height: 1.52;
+    color: #57534E;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+
+  /* ========================================================
+     4. news_barchart / 데이터 막대 차트 & Key Insights형 (레퍼런스 5번)
+     ======================================================== */
+  .layout-news-chart-wrap {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 40px 36px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .chart-left-area {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-top: 20px;
+  }
+
+  .chart-y-axis-container {
+    display: flex;
+    position: relative;
+    height: 380px;
+  }
+
+  .chart-y-ticks {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 60px;
+    font-size: 19px;
+    color: #78716C;
+    font-weight: 600;
+    padding-bottom: 28px;
+    text-align: right;
+    padding-right: 10px;
+  }
+
+  .chart-bars-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    border-bottom: 2px solid #D6D3D1;
+    padding-bottom: 2px;
+  }
+
+  .chart-grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #E7E5E4;
+    z-index: 1;
+  }
+
+  .chart-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 58px;
+    z-index: 2;
+  }
+
+  .bar-val-label {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 23px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1A1A1A;
+  }
+
+  .bar-pillar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s;
+  }
+
+  .bar-x-label {
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #57534E;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .chart-right-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+    padding-left: 20px;
+    border-left: 1.5px solid #EAE6DF;
+  }
+
+  .chart-legend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #44403C;
+  }
+
+  .legend-color-box {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+  }
+
+  .chart-insights-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .insights-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1A1A1A;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+  }
+
+  .insights-text {
+    font-size: 24px;
+    line-height: 1.65;
+    color: #57534E;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+
+  /* ========================================================
+     5. news_step_circle / Step-by-Step 3개 원형 타임라인 (레퍼런스 6번)
+     ======================================================== */
+  .layout-step-circle-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 0;
+  }
+
+  .circle-steps-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    position: relative;
+    gap: 24px;
+  }
+
+  .circle-steps-axis {
+    position: absolute;
+    top: 55px;
+    left: 12%;
+    right: 12%;
+    height: 3px;
+    background-color: #1A1A1A;
+    z-index: 1;
+  }
+
+  .circle-step-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .step-circle-badge {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background-color: #FFFFFF;
+    border: 4px solid #1A1A1A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 46px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 26px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  .step-col-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 12px;
+    transform: scaleX(0.97);
+  }
+
+  .step-col-desc {
+    font-size: 24px;
+    line-height: 1.60;
+    color: #44403C;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+    padding: 0 10px;
+  }
+
+  /* ========================================================
+     6. news_process_chevron / 4단계 셰브론 타임라인 (레퍼런스 7번)
+     ======================================================== */
+  .layout-chevron-process-wrap {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .chevron-col-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chevron-header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    position: relative;
+    clip-path: polygon(0% 0%, calc(100% - 18px) 0%, 100% 50%, calc(100% - 18px) 100%, 0% 100%, 18px 50%);
+  }
+
+  .chevron-header.first-chevron {
+    clip-path: polygon(0% 0%, calc(100% - 18px) 0%, 100% 50%, calc(100% - 18px) 100%, 0% 100%);
+    border-radius: 8px 0 0 0;
+  }
+
+  .chevron-bg-dark   { background-color: #262626; }
+  .chevron-bg-orange { background-color: #D84315; }
+
+  .chevron-body {
+    background-color: #FAF0EB;
+    padding: 26px 14px 28px;
+    border-radius: 0 0 10px 10px;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .chevron-step-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 27px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 18px;
+    transform: scaleX(0.97);
+  }
+
+  .chevron-bullet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    width: 100%;
+    padding: 0 4px;
+  }
+
+  .chevron-bullet-item {
+    font-size: 21px;
+    line-height: 1.50;
+    color: #44403C;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+    display: flex;
+    gap: 6px;
+  }
+
+  .chevron-bullet-item span {
+    flex-shrink: 0;
+    color: #D84315;
+    font-weight: 700;
+  }
+
+  /* ========================================================
+     7. news_pros_cons / 찬반 쟁점 분석 (레퍼런스 8번)
+     ======================================================== */
+  .layout-pros-cons-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .pros-col-box, .cons-col-box {
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: hidden;
+    background-color: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  }
+
+  .pros-col-box {
+    border: 3px solid #2E7D32;
+  }
+  .cons-col-box {
+    border: 3px solid #C62828;
+  }
+
+  .pros-header {
+    background-color: #2E7D32;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    padding: 16px 20px;
+    text-align: center;
+    transform: scaleX(0.97);
+  }
+
+  .cons-header {
+    background-color: #C62828;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    padding: 16px 20px;
+    text-align: center;
+    transform: scaleX(0.97);
+  }
+
+  .pros-cons-body {
+    padding: 30px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 460px;
+  }
+
+  .pros-cons-bullet {
+    font-size: 25px;
+    line-height: 1.65;
+    color: #374151;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .pros-cons-bullet .dot {
+    font-size: 24px;
+    line-height: 1.2;
+    flex-shrink: 0;
+  }
+  .pros-col-box .dot { color: #2E7D32; }
+  .cons-col-box .dot { color: #C62828; }
+
+  /* ========================================================
+     8. news_compare_old_new / 신구 정책 비교 분석 (레퍼런스 9번)
+     ======================================================== */
+  .layout-compare-oldnew-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .oldnew-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .old-col-card, .new-col-card {
+    border-radius: 20px;
+    overflow: hidden;
+    background-color: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  }
+
+  .old-col-card { border: 3px solid #292524; }
+  .new-col-card { border: 3px solid #D84315; }
+
+  .old-col-header {
+    background-color: #292524;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    padding: 16px 20px;
+    text-align: center;
+    transform: scaleX(0.97);
+  }
+
+  .new-col-header {
+    background-color: #D84315;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    padding: 16px 20px;
+    text-align: center;
+    transform: scaleX(0.97);
+  }
+
+  .oldnew-body {
+    padding: 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 380px;
+  }
+
+  .oldnew-item-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .oldnew-item-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1A1A1A;
+    transform: scaleX(0.97);
+  }
+
+  .oldnew-item-desc {
+    font-size: 23px;
+    line-height: 1.58;
+    color: #4B5563;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+    padding-left: 20px;
+  }
+
+  .oldnew-bottom-summary {
+    font-size: 25px;
+    line-height: 1.65;
+    color: #4B5563;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    padding: 18px 24px;
+    border: 1.5px solid #E5E7EB;
+  }
+
+  /* ========================================================
+     9. news_stat_briefing / 주요 통계 브리핑 (레퍼런스 10번)
+     ======================================================== */
+  .layout-stat-briefing-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .stat-briefing-row {
+    display: grid;
+    grid-template-columns: 290px 1fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .stat-briefing-left {
+    background-color: #FBECE4;
+    border-radius: 12px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .stat-briefing-num {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 50px;
+    font-weight: 700;
+    color: #D84315;
+    line-height: 1.1;
+    margin-bottom: 6px;
+    transform: scaleX(0.97);
+    white-space: nowrap;
+  }
+
+  .stat-briefing-label {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1A1A1A;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+  }
+
+  .stat-briefing-right {
+    background-color: #FFFFFF;
+    border: 2px solid #D6D3D1;
+    border-radius: 12px;
+    padding: 22px 26px;
+    display: flex;
+    align-items: center;
+    font-size: 26px;
+    line-height: 1.60;
+    color: #374151;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+
+  /* ========================================================
+     10. news_outro / 클로징 엔딩형 (레퍼런스 3번)
+     ======================================================== */
+  .layout-news-outro-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 100%;
+    padding-top: 24px;
+    position: relative;
+  }
+
+  .outro-speech-bubble {
+    width: 82px;
+    height: 60px;
+    background-color: #D84315;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .outro-speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #D84315 transparent;
+    display: block;
+    width: 0;
+  }
+
+  .speech-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .speech-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #FFFFFF;
+    border-radius: 50%;
+  }
+
+  .outro-headline {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 68px;
+    font-weight: 700;
+    color: #1A1A1A;
+    line-height: 1.25;
+    margin-bottom: 26px;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+    word-break: keep-all;
+    max-width: 640px;
+  }
+
+  .outro-desc-p {
+    font-size: 30px;
+    line-height: 1.75;
+    color: #4B5563;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+    max-width: 660px;
+  }
+
+  /* 신문형 중제목/소제목 스타일 */
+  .news-sub-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: #6B7280;
+    margin-top: 10px;
+    line-height: 1.42;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+
+  /* 통계 세부 텍스트 및 배지 */
+  .stat-detail-text {
+    font-size: 27px;
+    line-height: 1.60;
+    color: #374151;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+  .stat-sub-badge {
+    display: inline-block;
+    margin-top: 8px;
+    background-color: #FBECE4;
+    color: #D84315;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 6px;
+    transform: scaleX(0.97);
+  }
+
+  /* 2분할 비교형 세부 스타일 */
+  .comp-col-val {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 46px;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    transform: scaleX(0.97);
+    word-break: keep-all;
+  }
+  .comp-col-desc {
+    font-size: 26px;
+    line-height: 1.65;
+    color: #4B5563;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+  .comp-col-sub {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 10px;
+  }
+
+  /* 4분할 바둑판 그리드 */
+  .layout-news-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .news-grid-card {
+    background-color: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+  .news-grid-card.accent {
+    border-color: #D84315;
+    background-color: #FFFDFB;
+  }
+  .news-grid-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .news-grid-badge {
+    background-color: #D84315;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+  }
+  .news-grid-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1A1A1A;
+    transform: scaleX(0.97);
+  }
+  .news-grid-val {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: #D84315;
+    margin-bottom: 8px;
+  }
+  .news-grid-desc {
+    font-size: 24px;
+    line-height: 1.58;
+    color: #4B5563;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+
+  /* 다항목 정밀 분석 테이블 */
+  .layout-news-table-wrap {
+    background: #FFFFFF;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid #D6D3D1;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+  .news-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .news-matrix-table th {
+    background-color: #292524;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 25px;
+    font-weight: 700;
+    padding: 18px 24px;
+    text-align: left;
+    transform: scaleX(0.97);
+  }
+  .news-matrix-table td {
+    padding: 22px 24px;
+    border-bottom: 1.5px solid #E5E7EB;
+    vertical-align: middle;
+  }
+  .news-matrix-table tr:last-child td {
+    border-bottom: none;
+  }
+  .td-label {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 25px;
+    font-weight: 700;
+    color: #D84315;
+    transform: scaleX(0.97);
+    word-break: keep-all;
+  }
+  .td-detail {
+    font-size: 26px;
+    line-height: 1.60;
+    color: #374151;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+  .td-val-badge {
+    display: inline-block;
+    background-color: #FBECE4;
+    color: #D84315;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 6px;
+    margin-right: 8px;
+    transform: scaleX(0.97);
+  }
+
+  /* 리스트 / 불릿 브리핑 카드 */
+  .layout-news-list-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .news-article-card {
+    background-color: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-left: 6px solid #D84315;
+    border-radius: 12px;
+    padding: 22px 26px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+  .news-card-badge-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .news-card-num {
+    background-color: #292524;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 6px;
+  }
+  .news-card-label {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 27px;
+    font-weight: 700;
+    color: #1A1A1A;
+    transform: scaleX(0.97);
+  }
+  .news-card-val {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #D84315;
+    margin-left: auto;
+  }
+  .news-card-body {
+    font-size: 27px;
+    line-height: 1.65;
+    color: #4B5563;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+
+  /* 엔딩 총평 아이템 리스트 */
+  .outro-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    width: 100%;
+    max-width: 820px;
+  }
+  .outro-item-box {
+    background-color: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-left: 6px solid #D84315;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  }
+  .outro-item-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .outro-item-tag {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #D84315;
+  }
+  .outro-item-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1A1A1A;
+    transform: scaleX(0.97);
+  }
+  .outro-item-detail {
+    font-size: 25px;
+    line-height: 1.60;
+    color: #4B5563;
+    font-weight: 500;
+    word-break: keep-all;
+    text-wrap: pretty;
+  }
+  .outro-cta-bar {
+    background-color: #292524;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 16px 28px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 820px;
+    margin-top: 10px;
+  }
+
+  /* 하단 인사이트 코멘트 바 */
+  .news-footer-insight {
+    position: absolute;
+    bottom: 96px;
+    left: 75px;
+    right: 75px;
+    background-color: #FFFFFF;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 10;
+  }
+  .insight-badge {
+    background-color: #D84315;
+    color: #FFFFFF;
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transform: scaleX(0.97);
+  }
+  .insight-text {
+    font-size: 24px;
+    color: #374151;
+    font-weight: 600;
+    line-height: 1.4;
+    word-break: keep-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+</head>
+<body>
+
+  <!-- 상단 포인트 오렌지 바: 신문 그래픽 카드가 아닐 때 포인트로 표시 -->
+  {% if not ((card.layout_type in ['news_outro', 'news_step_circle', 'outro', 'step_circle']) or card.show_newspaper) %}
+    <div class="top-accent-line"></div>
+  {% else %}
+    <div style="height: 25px;"></div>
+  {% endif %}
+
+  <!-- 우측 상단 신문 그래픽 (outro 또는 지정된 카드에 표시) -->
+  {% if card.layout_type in ['news_outro', 'news_step_circle', 'outro', 'step_circle'] or card.show_newspaper %}
+    {% if newspaper_img_uri %}
+      <img src="{{ newspaper_img_uri }}" class="newspaper-top-graphic" alt="The News">
+    {% endif %}
+  {% endif %}
+
+  {% if card.layout_type not in ['news_outro', 'outro', 'conclusion'] %}
+  <!-- 헤더 영역 (카테고리 + 대제목 + 부제목) -->
+  <div class="news-header {{ 'header-with-graphic' if (card.layout_type in ['news_step_circle', 'step_circle'] or card.show_newspaper) else '' }}">
+    <div class="news-category-tag">
+      {{ card.category_tag if card.category_tag else (card.badge if card.badge else '입시·교육 뉴스') }}
+    </div>
+    <div class="news-main-title">
+      {{ card.title | replace('\n', '<br>') | safe }}
+    </div>
+    {% if card.subtitle %}
+    <div class="news-sub-title">
+      {{ card.subtitle }}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- 본문 컨텐츠 영역 (레이아웃 분기) -->
+  <div class="news-body-content">
+
+    <!-- 1. stat / 주요 통계 및 수치 브리핑 -->
+    {% if card.layout_type in ['stat', 'stat_rows', 'news_stat_briefing', 'stat_briefing', 'stats_3', 'hero_stat'] %}
+      <div class="layout-stat-briefing-wrap">
+        {% for row in card.get('items', []) %}
+          <div class="stat-briefing-row">
+            <div class="stat-briefing-left">
+              <div class="stat-briefing-num">{{ row.value or row.number or ('0' ~ loop.index) }}</div>
+              <div class="stat-briefing-label">{{ row.label }}</div>
+            </div>
+            <div class="stat-briefing-right">
+              <div>
+                {% if row.detail %}
+                  <div class="stat-detail-text">{{ row.detail }}</div>
+                {% elif row.desc %}
+                  <div class="stat-detail-text">{{ row.desc }}</div>
+                {% endif %}
+                {% if row.sub %}
+                  <div class="stat-sub-badge">{{ row.sub }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+    <!-- 2. comparison / 2분할 대조 및 비교 분석 -->
+    {% elif card.layout_type in ['comparison', '2rows', 'before_after', 'news_compare_old_new', 'compare_old_new', 'old_new', 'news_pros_cons', 'pros_cons', 'debate'] %}
+      <div class="layout-compare-oldnew-wrap">
+        {% set items = card.get('items', []) %}
+        {% set item_a = items[0] if items|length > 0 else none %}
+        {% set item_b = items[1] if items|length > 1 else none %}
+        <div class="oldnew-grid">
+          <!-- 좌측 컬럼 A -->
+          <div class="old-col-card">
+            <div class="old-col-header">{{ (item_a.label if item_a else card.old_title) or '비교 항목 A' }}</div>
+            <div class="oldnew-body">
+              {% if item_a %}
+                {% if item_a.value %}
+                  <div class="comp-col-val" style="color: #292524;">{{ item_a.value }}</div>
+                {% endif %}
+                {% if item_a.detail %}
+                  <div class="comp-col-desc">{{ item_a.detail }}</div>
+                {% elif item_a.desc %}
+                  <div class="comp-col-desc">{{ item_a.desc }}</div>
+                {% endif %}
+                {% if item_a.sub %}
+                  <div class="comp-col-sub" style="color: #292524;">{{ item_a.sub }}</div>
+                {% endif %}
+              {% elif card.old_items %}
+                {% for itm in card.old_items %}
+                  <div class="oldnew-item-row">
+                    <div class="oldnew-item-title">{{ loop.index }}. {{ itm.title }}</div>
+                    <div class="oldnew-item-desc">{{ itm.desc }}</div>
+                  </div>
+                {% endfor %}
+              {% elif card.pros_bullets %}
+                {% for b in card.pros_bullets %}
+                  <div class="oldnew-item-row">
+                    <div class="oldnew-item-desc">• {{ b }}</div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+          <!-- 우측 컬럼 B -->
+          <div class="new-col-card">
+            <div class="new-col-header">{{ (item_b.label if item_b else card.new_title) or '비교 항목 B' }}</div>
+            <div class="oldnew-body">
+              {% if item_b %}
+                {% if item_b.value %}
+                  <div class="comp-col-val" style="color: #D84315;">{{ item_b.value }}</div>
+                {% endif %}
+                {% if item_b.detail %}
+                  <div class="comp-col-desc">{{ item_b.detail }}</div>
+                {% elif item_b.desc %}
+                  <div class="comp-col-desc">{{ item_b.desc }}</div>
+                {% endif %}
+                {% if item_b.sub %}
+                  <div class="comp-col-sub" style="color: #D84315;">{{ item_b.sub }}</div>
+                {% endif %}
+              {% elif card.new_items %}
+                {% for itm in card.new_items %}
+                  <div class="oldnew-item-row">
+                    <div class="oldnew-item-title">{{ loop.index }}. {{ itm.title }}</div>
+                    <div class="oldnew-item-desc">{{ itm.desc }}</div>
+                  </div>
+                {% endfor %}
+              {% elif card.cons_bullets %}
+                {% for b in card.cons_bullets %}
+                  <div class="oldnew-item-row">
+                    <div class="oldnew-item-desc">• {{ b }}</div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% if card.bottom_summary %}
+          <div class="oldnew-bottom-summary">
+            {{ card.bottom_summary }}
+          </div>
+        {% endif %}
+      </div>
+
+    <!-- 3. step / 타임라인 및 3대 핵심 포인트 -->
+    {% elif card.layout_type in ['step', 'step_3', 'cards_3', 'news_step_circle', 'step_circle'] %}
+      <div class="layout-step-circle-wrap">
+        <div class="circle-steps-container">
+          <div class="circle-steps-axis"></div>
+          {% for item in card.get('items', [])[:3] %}
+            <div class="circle-step-col">
+              <div class="step-circle-badge">{{ loop.index }}</div>
+              <div class="step-col-title">{{ item.label or item.title }}</div>
+              <div class="step-col-desc">{{ item.detail or item.desc or (item.value if item.value else '') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    <!-- 4. grid / 4분할 바둑판 그리드 & 4대 토픽 -->
+    {% elif card.layout_type in ['grid', 'grid_4', 'news_topics', 'topics', 'grid_4_topics', 'mindmap', 'radar', 'news_process_chevron', 'process_chevron', 'chevron_4'] %}
+      <div class="layout-news-grid-2x2">
+        {% for item in card.get('items', [])[:4] %}
+          <div class="news-grid-card {{ 'accent' if loop.index in [1, 4] else '' }}">
+            <div class="news-grid-top">
+              <span class="news-grid-badge">0{{ loop.index }}</span>
+              <span class="news-grid-title">{{ item.label or item.title or item.name }}</span>
+            </div>
+            {% if item.value %}
+              <div class="news-grid-val">{{ item.value }}</div>
+            {% endif %}
+            <div class="news-grid-desc">{{ item.detail or item.desc }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+    <!-- 5. table / 다항목 정밀 분석 테이블 -->
+    {% elif card.layout_type == 'table' %}
+      <div class="layout-news-table-wrap">
+        <table class="news-matrix-table">
+          <thead>
+            <tr>
+              <th style="width: 32%;">비교 기준</th>
+              <th style="width: 68%;">분석 결과 및 현황</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in card.get('items', []) %}
+            <tr>
+              <td class="td-label">{{ item.label }}</td>
+              <td class="td-detail">
+                {% if item.value %}<span class="td-val-badge">{{ item.value }}</span>{% endif %}
+                <span class="td-text">{{ item.detail or item.sub or item.desc }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    <!-- 6. news_photo: 포토 뉴스형 -->
+    {% elif card.layout_type in ['news_photo', 'photo_news', 'cover_news'] %}
+      <div class="layout-news-photo-wrap">
+        {% if card.image_url or photo_img_uri %}
+          <div class="news-photo-img-box">
+            <img src="{{ card.image_url if card.image_url else photo_img_uri }}" alt="News Photo">
+          </div>
+        {% endif %}
+        <div class="news-photo-desc-box">
+          {% if card.paragraphs %}
+            {% for p in card.paragraphs %}
+              <p>{{ p }}</p>
+            {% endfor %}
+          {% elif card.desc %}
+            <p>{{ card.desc | replace('\n', '<br>') | safe }}</p>
+          {% elif card.content %}
+            <p>{{ card.content | replace('\n', '<br>') | safe }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+    <!-- 7. news_barchart: 데이터 막대 차트 & Key Insights형 -->
+    {% elif card.layout_type in ['news_barchart', 'barchart', 'chart'] %}
+      <div class="layout-news-chart-wrap">
+        <div class="chart-left-area">
+          <div class="chart-y-axis-container">
+            <div class="chart-y-ticks">
+              <span>40%</span>
+              <span>30%</span>
+              <span>20%</span>
+              <span>10%</span>
+              <span>0%</span>
+            </div>
+            <div class="chart-bars-wrap">
+              <div class="chart-grid-line" style="bottom: 0%;"></div>
+              <div class="chart-grid-line" style="bottom: 25%;"></div>
+              <div class="chart-grid-line" style="bottom: 50%;"></div>
+              <div class="chart-grid-line" style="bottom: 75%;"></div>
+              <div class="chart-grid-line" style="bottom: 100%;"></div>
+
+              {% set default_bars = [
+                {'label': 'A', 'val': 35, 'color': '#262626'},
+                {'label': 'B', 'val': 20, 'color': '#D84315'},
+                {'label': 'C', 'val': 45, 'color': '#D1D5DB'},
+                {'label': 'D', 'val': 37, 'color': '#78716C'}
+              ] %}
+              {% set chart_items = card['items'] if card['items'] else default_bars %}
+              {% for bar in chart_items %}
+                <div class="chart-bar-item">
+                  <div class="bar-val-label">{{ bar.val }}%</div>
+                  <div class="bar-pillar" style="height: {{ ((bar.val | string | replace('%', '') | float) / 50.0 * 280) | round }}px; background-color: {{ bar.color if bar.color else ('#D84315' if loop.index == 2 else '#262626') }};"></div>
+                  <div class="bar-x-label">{{ bar.label }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-right-area">
+          <div class="chart-legend-list">
+            {% if card.legends %}
+              {% for leg in card.legends %}
+                <div class="legend-row">
+                  <div class="legend-color-box" style="background-color: {{ leg.color }};"></div>
+                  <span>{{ leg.label }}</span>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="legend-row"><div class="legend-color-box" style="background:#262626;"></div><span>일반 학원</span></div>
+              <div class="legend-row"><div class="legend-color-box" style="background:#D84315;"></div><span>오늘도국어</span></div>
+              <div class="legend-row"><div class="legend-color-box" style="background:#D1D5DB;"></div><span>전국 평균</span></div>
+            {% endif %}
+          </div>
+          <div class="chart-insights-box">
+            <div class="insights-title">{{ card.insights_title if card.insights_title else 'Key Insights' }}</div>
+            <div class="insights-text">
+              {{ card.insights_text if card.insights_text else card.desc }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- 8. list / 체크리스트 & 핵심 브리핑 목록 -->
+    {% elif card.layout_type in ['checklist', 'list', 'flow', 'chat', 'factcheck', 'push', 'ox_quiz', 'review', 'faq', 'news_callout', 'callout', 'highlight_badge'] %}
+      <div class="layout-news-list-wrap">
+        {% if card.callout_badge or card.highlight_text %}
+          <div class="news-callout-badge">
+            {{ card.callout_badge if card.callout_badge else card.highlight_text }}
+          </div>
+        {% endif %}
+        {% if card.get('items') %}
+          {% for item in card.get('items') %}
+            <div class="news-article-card">
+              <div class="news-card-badge-line">
+                <span class="news-card-num">POINT 0{{ loop.index }}</span>
+                <span class="news-card-label">{{ item.label }}</span>
+                {% if item.value %}<span class="news-card-val">{{ item.value }}</span>{% endif %}
+              </div>
+              <div class="news-card-body">
+                {{ item.detail or item.desc }}
+              </div>
+            </div>
+          {% endfor %}
+        {% elif card.paragraphs %}
+          {% for p in card.paragraphs %}
+            <div class="news-callout-p">{{ p }}</div>
+          {% endfor %}
+        {% elif card.desc %}
+          <div class="news-callout-p">{{ card.desc | replace('\n', '<br><br>') | safe }}</div>
+        {% endif %}
+      </div>
+
+    <!-- 9. conclusion / 최종 총평 및 저장 유도 엔딩 -->
+    {% elif card.layout_type in ['conclusion', 'news_outro', 'outro', 'summary'] %}
+      <div class="layout-news-outro-wrap">
+        <div class="outro-speech-bubble">
+          <div class="speech-dots">
+            <div class="speech-dot"></div>
+            <div class="speech-dot"></div>
+            <div class="speech-dot"></div>
+          </div>
+        </div>
+        <div class="outro-headline">
+          {{ (card.headline if card.headline else (card.title if card.title else '오늘의 입시·교육 뉴스\n핵심 총평')) | replace('\n', '<br>') | safe }}
+        </div>
+
+        {% if card.get('items') %}
+          <div class="outro-items-list">
+            {% for item in card.get('items') %}
+              <div class="outro-item-box">
+                <div class="outro-item-header">
+                  <span class="outro-item-tag">💡 POINT 0{{ loop.index }}</span>
+                  <span class="outro-item-title">{{ item.label }}</span>
+                </div>
+                <div class="outro-item-detail">{{ item.detail or item.desc }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% elif card.paragraphs %}
+          <div class="outro-desc-p">
+            {% for p in card.paragraphs %}
+              <p style="margin-bottom: 16px;">{{ p }}</p>
+            {% endfor %}
+          </div>
+        {% elif card.desc %}
+          <div class="outro-desc-p">
+            <p>{{ card.desc | replace('\n', '<br><br>') | safe }}</p>
+          </div>
+        {% else %}
+          <div class="outro-desc-p">
+            이번 주에도 다양한 교육 정책과 입시 제도의 변화가 있었습니다.<br>
+            다음 주에도 가장 신뢰할 수 있고 유익한 정보로 다시 찾아뵙겠습니다.
+          </div>
+        {% endif %}
+
+        <div class="outro-cta-bar">
+          <span>📌 나중에 다시 보려면 게시물 저장 & 공유</span>
+          <span>💾 SAVE</span>
+        </div>
+      </div>
+
+    <!-- 기본 폴백 (Items / Desc) -->
+    {% else %}
+      <div class="layout-news-list-wrap">
+        {% if card.get('items') %}
+          {% for item in card.get('items') %}
+            <div class="news-article-card">
+              <div class="news-card-badge-line">
+                <span class="news-card-num">POINT 0{{ loop.index }}</span>
+                <span class="news-card-label">{{ item.label }}</span>
+                {% if item.value %}<span class="news-card-val">{{ item.value }}</span>{% endif %}
+              </div>
+              <div class="news-card-body">
+                {{ item.detail or item.desc }}
+              </div>
+            </div>
+          {% endfor %}
+        {% elif card.desc %}
+          <div class="news-callout-p">{{ card.desc | replace('\n', '<br><br>') | safe }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  </div>
+
+  <!-- 하단 인사이트 코멘트 바 (있는 경우) -->
+  {% if card.footer_insight and card.layout_type not in ['news_outro', 'outro', 'conclusion'] %}
+  <div class="news-footer-insight">
+    <span class="insight-badge">KEY INSIGHT</span>
+    <span class="insight-text">{{ card.footer_insight }}</span>
+  </div>
+  {% endif %}
+
+  <!-- 하단 고정 푸터 바 (@todaykorean5195) -->
+  <div class="news-footer">
+    <span class="footer-handle">@todaykorean5195</span>
+    <div class="footer-line"></div>
+  </div>
+
+</body>
+</html>

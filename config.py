@@ -55,7 +55,7 @@ NCP_CLIENT_SECRET = get_setting("NCP_CLIENT_SECRET", "CAbymJysI8tJ8xz35iTz480rnR
 NCP_API_URL = "https://naverapihub.apigw.ntruss.com/search/v1/news"
 
 # 4. Gemini AI 모델 기본 설정
-DEFAULT_GEMINI_MODEL = get_setting("GEMINI_MODEL", "gemini-2.5-flash")
+DEFAULT_GEMINI_MODEL = get_setting("GEMINI_MODEL", "gemini-3.8-flash")
 
 # 5. 4대 카테고리별 검색 키워드 체계
 NEWS_CATEGORIES = {

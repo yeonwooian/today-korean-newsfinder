@@ -36,12 +36,22 @@ class CardData(BaseModel):
         "step", "hero_stat", "grid", "flow", 
         "chat", "table", "factcheck", 
         "push", "ox_quiz", "mindmap", "before_after",
-        "radar", "exam",
-        "conclusion"
+        "radar", "exam", "conclusion",
+        "stat_rows", "grid_4", "review", "faq",
+        "news_photo", "news_callout", "news_topics",
+        "news_barchart", "news_step_circle", "news_process_chevron",
+        "news_pros_cons", "news_compare_old_new", "news_stat_briefing", "news_outro"
     ] = Field(
-        description="레이아웃 타입 (1번은 cover, 마지막은 conclusion 고정, 본문은 기사 특성에 맞게 다양하게 채택)"
+        description="레이아웃 타입 (1번은 cover 또는 news_photo, 마지막은 conclusion 또는 news_outro 고정, 본문은 기사 특성에 맞게 다양하게 채택)"
     )
     items: List[CardItem] = Field(default=[], description="카드 본문에 표시할 주요 데이터 항목")
+    paragraphs: Optional[List[str]] = Field(default=None, description="상세 설명 문단 목록 (news_photo, news_callout, news_outro 등에서 활용)")
+    callout_badge: Optional[str] = Field(default=None, description="강조 배지 문구 (news_callout 등에서 활용)")
+    pros_bullets: Optional[List[str]] = Field(default=None, description="찬성 입장 불릿 목록 (news_pros_cons에서 활용)")
+    cons_bullets: Optional[List[str]] = Field(default=None, description="반대 입장 불릿 목록 (news_pros_cons에서 활용)")
+    old_items: Optional[List[CardItem]] = Field(default=None, description="기존 정책 항목 목록 (news_compare_old_new에서 활용)")
+    new_items: Optional[List[CardItem]] = Field(default=None, description="신규 정책 항목 목록 (news_compare_old_new에서 활용)")
+    bottom_summary: Optional[str] = Field(default=None, description="하단 종합 요약문")
     footer_insight: Optional[str] = Field(default=None, description="하단 한 줄 팁/인사이트 코멘트 (1줄에 깔끔하게 들어가도록 30~35자 내외의 간결한 한 문장)")
 
 class CardNewsPlanResult(BaseModel):
@@ -95,8 +105,22 @@ def plan_cardnews_and_caption(
 4. 1번 카드는 반드시 'cover' 타입이어야 합니다 (스크롤을 즉시 멈추게 하는 강력한 훅킹 타이틀).
 5. 마지막 카드는 반드시 'conclusion' 타입이어야 합니다 (전체 총평, 수험생이 주의할 변수, 저장 및 댓글 유도 CTA).
 6. 중간 본문 카드들은 기사 내용의 성격과 데이터 형태에 맞춰 아래 레이아웃 중 최적의 것을 풍부하고 다채롭게 선택하세요:
+   - 'stat_rows': 가로형 3단 핵심 지표/수치 카드 (좌측 항목명/설명 + 우측 68px 대형 수치, 예: 98.4%, 1,200명+)
+   - 'before_after': 좌우 2열 대조 비교 (BEFORE vs AFTER 각각의 불릿 리스트 비교 + 하단 점선 핵심 요약)
+   - 'grid_4': 4단계 집중 커리큘럼 / 4대 핵심 영역 (2x2 바둑판 그리드, 01~04 번호 배지 + 소제목 + 설명)
+   - 'review': 수강생/학부모 생생 후기 또는 전문가 명언/인터뷰 (별 5개 ★★★★★ + 큰따옴표 인용구 + 작성자 프로필)
+   - 'faq': 자주 묻는 질문 3선 (Q 질문 + A 명쾌한 답변 3개 박스)
+    - 'news_callout': 신문 사설/브리핑형 (상단 강조 배지 + 2단 심층 분석 문단)
+    - 'news_topics': 4대 핵심 개편 이슈 4단 컬럼 (아이콘 + 영문/국문 주제 + 간략 설명)
+    - 'news_barchart': 막대 그래프 통계 분석 + Key Insights 핵심 인사이트
+    - 'news_step_circle': 3단계 원형 타임라인 (1-2-3 원형 번호 배지 + 단계별 행동 요령)
+    - 'news_process_chevron': 4단계 셰브론 화살표 타임라인 (①~④ 셰브론 헤더 + 세부 불릿 목록)
+    - 'news_pros_cons': 찬반 쟁점 분석 (녹색 찬성 Pros vs 적색 반대 Cons 불릿 대조)
+    - 'news_compare_old_new': 신구 정책 비교 분석 (다크 Old vs 오렌지 New 1/2/3 항목별 정밀 대조)
+    - 'news_stat_briefing': 주요 통계 3단 브리핑 (좌측 대형 수치 박스 + 우측 세부 설명 박스)
    - 'stat': 복수 통계/수치 지표 나열 및 강조
    - 'hero_stat': 단 하나의 가장 충격적이거나 파급력 큰 초대형 수치(+142% 등) 강조 + 하단 세부 분석 리스트
+   - 'cards_3': 3대 핵심 변화 / 3개 핵심 포인트 (3단 세로 분필 카드 나열)
    - 'comparison': 2개 기업/대학/전형 대조 비교 (2분할 박스)
    - 'table': 세부 기준별(마감 정보, 심리 상태, 지원 전략 등) 다항목 정밀 대조 테이블
    - 'step': 3단계 로드맵, 일정별 행동 요령, 단계별 필승 전략 (STEP 1-2-3 타임라인)
@@ -104,12 +128,7 @@ def plan_cardnews_and_caption(
    - 'flow': 원인 ➔ 결과, 문제점 ➔ 대응 전략 등 상하 인과관계 흐름
    - 'chat': 학생의 생생한 고민/질문 vs 선생님의 명쾌한 솔루션 1:1 Q&A 메신저 대화
    - 'factcheck': 시중의 루머/오해 인용(“ ”) ➔ 하향 화살표 ➔ 객관적 팩트 체크 및 근거 분석
-   - 'push': 긴급 속보, 실시간 마감 알림, 타임라인 전개 (스마트폰 푸시 알림 센터 UI, sub 필드는 '오늘도국어학원에서 알림' 지정)
-   - 'ox_quiz': 원서 접수 전 최종 자가 진단, 필수 체크 문항 (O/X 선택지 체크리스트)
-   - 'mindmap': 4대 핵심 성공 전략, 종합 로드맵 (중앙 코어 목표 허브 & 4방위 마인드맵)
-   - 'before_after': 실패하는 패턴(❌) vs 합격하는 패턴(✔) (비포 & 애프터 대조형)
-   - 'radar': 중심 개념에서 파생되는 4대 종합 전략/대응 매뉴얼 (중앙 핵심 허브에서 사방으로 뻗어나가는 4개 화살표 연결선 & 세부 정보 박스)
-   - 'exam': 실제 시험지/모의고사 국어 지문 첨삭 분석 (상단 라이트 시험지 지문 박스 + 오렌지 형광펜 및 빨간 볼펜 첨삭 + 하단 이T의 3초 킬러 독해 솔루션 네이비 박스)
+   - 'checklist': 필수 체크리스트 / 실천 로드맵 (✓ 체크 아이콘 + 소제목 및 줄바꿈 설명 목록)
    - 'list': 기본 배경 설명, 다각도 심층 분석 불릿 요약
 7. 중요한 수치나 키워드는 주황색('orange') 또는 파랑색('blue')을 적절히 배분하여 시각적 리듬감을 부여하세요.
 8. [★표지 파란색 카테고리 태그 동적 생성 - 필수★]:
@@ -139,7 +158,7 @@ def plan_cardnews_and_caption(
 {article_content}
 """
 
-    model_name = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+    model_name = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
     response = client.models.generate_content(
         model=model_name,
         contents=prompt,

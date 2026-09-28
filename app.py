@@ -256,30 +256,65 @@ if "search_date" not in st.session_state:
 gen_data = st.session_state.current_generation
 if gen_data is not None:
     render_top_header()
+
     # 1. 상단 복귀 버튼
     if st.button("↩ 기사모음으로 복귀", key="btn_return_top", use_container_width=True):
         st.session_state.current_generation = None
         st.rerun()
 
     st.markdown("---")
-    st.markdown("### 🎉 인스타 카드뉴스 제작 완료")
-    
+    st.markdown("### 🎉 인스타 카드뉴스 제작 및 검토")
+
     tg_res = gen_data.get("telegram_result")
     if tg_res and tg_res.get("success"):
-        st.markdown(
-            '<div class="badge-telegram">📱 텔레그램(오늘도_인스타운영)으로 자동 전송되었습니다!</div>',
-            unsafe_allow_html=True,
-        )
+        st.success("✅ 텔레그램(오늘도_인스타운영)으로 카드뉴스와 캡션이 전송되었습니다!")
     elif tg_res and not tg_res.get("success"):
         st.warning(f"⚠️ 텔레그램 전송 알림: {tg_res.get('error')}")
 
     article_info = gen_data.get("article", {})
-    st.caption(f"기사 원문: {article_info.get('title', '')}")
+    st.caption(f"📰 원문 기사: {article_info.get('title', '')}")
 
-    # 생성된 카드뉴스 갤러리 표시 (1080×1350 스마트폰 스크롤 맞춤)
+    # ==========================================
+    # 2. 레이아웃 선택 메뉴 (실시간 즉시 전환)
+    # ==========================================
+    st.markdown("#### 🎨 본문 레이아웃 스타일 선택")
+    layout_styles = {
+        "blackboard": "🍏 1. 칠판 에듀케이션 (초록 칠판 & 손그림 분필)",
+        "dark_signature": "🌙 2. 시그니처 다크 (네이비 & 강사 실루엣)",
+        "newspaper": "📰 3. 모던 신문 브리핑 (신문 사설 & 에디토리얼)",
+    }
+    curr_style = gen_data.get("selected_layout", "blackboard")
+
+    style_options = ["blackboard", "dark_signature", "newspaper"]
+    style_idx = style_options.index(curr_style) if curr_style in style_options else 0
+
+    chosen_style = st.radio(
+        "적용할 레이아웃 스타일을 선택하세요 (변경 시 1초 만에 즉시 반영):",
+        options=style_options,
+        format_func=lambda s: layout_styles.get(s, s),
+        index=style_idx,
+        horizontal=True,
+        key="sel_body_style",
+    )
+
+    if chosen_style != curr_style:
+        from renderer import render_cardnews
+        with st.spinner(f"'{layout_styles.get(chosen_style, chosen_style)}' 레이아웃으로 변경하는 중..."):
+            new_images = render_cardnews(
+                gen_data["plan"],
+                output_dir=str(BASE_DIR / "output"),
+                body_style=chosen_style,
+            )
+            gen_data["images"] = new_images
+            gen_data["selected_layout"] = chosen_style
+            st.rerun()
+
+    # ==========================================
+    # 3. 생성된 카드뉴스 갤러리 표시 (1080×1350)
+    # ==========================================
     images = gen_data.get("images", [])
     st.markdown(f"#### 🖼️ 완성된 카드뉴스 ({len(images)}장)")
-    
+
     for idx, img_path in enumerate(images, 1):
         if Path(img_path).exists():
             st.image(str(img_path), caption=f"Card {idx}", use_container_width=True)
@@ -293,17 +328,46 @@ if gen_data is not None:
                     use_container_width=True,
                 )
 
+    # ==========================================
+    # 4. 인스타그램 피드 캡션 (직접 수정 가능)
+    # ==========================================
     st.markdown("---")
-    # 인스타그램 피드 캡션 텍스트 박스
-    caption = gen_data.get("caption", "")
-    st.markdown("#### 📝 인스타그램 피드 캡션")
-    st.text_area("아래 내용을 복사하여 인스타 게시물 본문에 붙여넣으세요:", value=caption, height=280)
+    st.markdown("#### 📝 인스타그램 피드 캡션 (수정 가능)")
+    st.caption("인스타 본문으로 복사하거나 텔레그램으로 전송될 내용입니다. 자유롭게 수정하세요.")
+    edited_caption = st.text_area(
+        "피드 캡션 편집창:",
+        value=gen_data.get("caption", ""),
+        height=260,
+        key="caption_text_area",
+    )
+    gen_data["caption"] = edited_caption
 
+    # ==========================================
+    # 5. 최종 텔레그램 전송 버튼 & 하단 복귀
+    # ==========================================
     st.markdown("---")
-    # 2. 하단 복귀 버튼
-    if st.button("↩ 기사모음으로 복귀", key="btn_return_bottom", type="primary", use_container_width=True):
-        st.session_state.current_generation = None
-        st.rerun()
+    st.markdown("#### 🚀 텔레그램 최종 전송")
+    st.caption("검토 및 캡션 수정이 완료되면 아래 버튼을 눌러 텔레그램(오늘도_인스타운영)으로 발송하세요.")
+
+    col_send, col_back = st.columns([2, 1])
+    with col_send:
+        if st.button("📱 텔레그램(오늘도_인스타운영)으로 전송", type="primary", use_container_width=True):
+            from telegram_sender import send_cardnews_report
+            with st.spinner("텔레그램으로 카드뉴스 앨범과 캡션을 발송하는 중..."):
+                try:
+                    tg_send_res = send_cardnews_report(
+                        images=gen_data.get("images", []),
+                        caption_text=gen_data.get("caption", ""),
+                        article_title=article_info.get("title", ""),
+                    )
+                    gen_data["telegram_result"] = tg_send_res
+                    st.rerun()
+                except Exception as te:
+                    st.error(f"전송 중 오류 발생: {te}")
+    with col_back:
+        if st.button("↩ 기사모음으로 복귀", key="btn_return_bottom", use_container_width=True):
+            st.session_state.current_generation = None
+            st.rerun()
 
     st.stop()
 
@@ -353,6 +417,21 @@ total_articles = sum(len(items) for items in collected_news.values())
 
 st.write(f"📌 기준일: **{target_date_str}** | 총 **{total_articles}건**의 기사")
 
+# 3가지 레이아웃 스타일 사전 선택 메뉴
+layout_display_names = {
+    "blackboard": "🍏 1. 칠판 에듀케이션",
+    "dark_signature": "🌙 2. 시그니처 다크",
+    "newspaper": "📰 3. 모던 신문 브리핑",
+}
+st.markdown("#### 🎨 적용할 레이아웃 스타일")
+pre_style = st.radio(
+    "기사 선택 시 적용할 카드뉴스 레이아웃을 선택하세요 (결과 화면에서도 1초 만에 즉시 변경 가능):",
+    options=["blackboard", "dark_signature", "newspaper"],
+    format_func=lambda s: layout_display_names.get(s, s),
+    horizontal=True,
+    key="pre_selected_style",
+)
+
 # 4대 카테고리 탭 구성 (스마트폰 터치 탭)
 tabs = st.tabs([f"{cid}. {info['name']}" for cid, info in NEWS_CATEGORIES.items()])
 
@@ -394,20 +473,23 @@ for (cid, info), tab in zip(NEWS_CATEGORIES.items(), tabs):
                 )
             with col_btn:
                 btn_key = f"btn_create_{cid}_{idx}"
-                if st.button("🚀 게시물 생성", key=btn_key, type="primary", use_container_width=True):
+                chosen_style_name = layout_display_names.get(st.session_state.get("pre_selected_style", "blackboard"), "레이아웃")
+                if st.button(f"🎨 {chosen_style_name} 적용", key=btn_key, type="primary", use_container_width=True):
                     # 실행 프로그레스 표시
-                    with st.status("🎨 인스타그램 카드뉴스 생성 진행 중...", expanded=True) as status:
+                    with st.status("🎨 인스타그램 카드뉴스 기획 및 레이아웃 생성 중...", expanded=True) as status:
                         try:
                             def _cb(msg, pct):
                                 status.update(label=f"[{pct}%] {msg}")
 
+                            chosen_body_style = st.session_state.get("pre_selected_style", "blackboard")
                             result = run_pipeline(
                                 url=link,
                                 output_dir=str(BASE_DIR / "output"),
-                                send_telegram=True,
+                                send_telegram=False,  # 결과 확인 및 캡션 수정 후 '전송' 버튼으로 발송!
+                                body_style=chosen_body_style,
                                 progress_callback=_cb,
                             )
-                            status.update(label="✅ 생성 및 텔레그램 전송 완료!", state="complete")
+                            status.update(label="✅ 카드뉴스 기획 및 레이아웃 적용 완료!", state="complete")
                             st.session_state.current_generation = result
                             st.rerun()
                         except Exception as pe:

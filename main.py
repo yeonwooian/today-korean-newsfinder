@@ -45,6 +45,7 @@ def run_pipeline(
     url: str,
     output_dir: str = "output",
     send_telegram: bool = False,
+    body_style: str = "blackboard",
     progress_callback = None,
 ) -> dict:
     """
@@ -81,10 +82,10 @@ def run_pipeline(
 
     # 3. 4:5 고화질 이미지 렌더링 (Playwright)
     if progress_callback:
-        progress_callback("Playwright 1080×1350 고해상도 이미지 렌더링 중...", 80)
-    print(f"\n[3단계] Playwright 고해상도(1080×1350) 이미지 렌더링 중...")
+        progress_callback(f"Playwright 1080×1350 '{body_style}' 레이아웃 렌더링 중...", 80)
+    print(f"\n[3단계] Playwright 고해상도(1080×1350) '{body_style}' 레이아웃 이미지 렌더링 중...")
     from renderer import render_cardnews
-    images = render_cardnews(plan_result, output_dir=output_dir)
+    images = render_cardnews(plan_result, output_dir=output_dir, body_style=body_style)
 
     # 4. 인스타그램 피드 캡션 파일 저장
     out_dir_path = Path(output_dir)
@@ -122,6 +123,7 @@ def run_pipeline(
         "images": images,
         "caption": caption_content,
         "caption_file": str(caption_file),
+        "selected_layout": body_style,
         "telegram_result": telegram_res,
     }
 

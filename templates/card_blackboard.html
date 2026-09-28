@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  @font-face {
+    font-family: 'SBAggroB';
+    src: url('{{ font_aggro_uri }}') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 4:5 인스타그램 규격 (1080 x 1350) */
+  body {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    background-color: #17261E;
+    color: #FFFFFF;
+    word-break: keep-all;
+  }
+
+  /* 칠판 본체 프레임 (외곽 라운드 및 리얼 초록 칠판 질감) */
+  .chalkboard-frame {
+    position: absolute;
+    top: 40px;
+    left: 45px;
+    width: 990px;
+    height: 1270px;
+    background: radial-gradient(circle at 50% 45%, #2B4839 0%, #203B2E 55%, #162C22 100%);
+    border-radius: 36px 36px 8px 8px;
+    box-shadow: 
+      inset 0 0 100px rgba(0, 0, 0, 0.45),
+      inset 0 0 30px rgba(0, 0, 0, 0.6),
+      0 12px 35px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+
+  /* 은은한 칠판 분필 가루 및 스크래치 질감 오버레이 */
+  .chalk-dust-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px, 80px 80px;
+    background-position: 0 0, 20px 20px;
+    pointer-events: none;
+    opacity: 0.65;
+  }
+
+  /* 칠판 하단 나무 분필 받침대 (Wooden Chalk Tray) */
+  .wood-tray {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 52px;
+    background: linear-gradient(180deg, #A7744E 0%, #8A5A36 45%, #6A3E1F 100%);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 60px;
+    z-index: 10;
+  }
+  .wood-tray-groove {
+    position: absolute;
+    top: 6px;
+    left: 40px;
+    right: 40px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 2px;
+  }
+  .chalk-holder-left {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 6px;
+  }
+  .chalk-holder-right {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 6px;
+  }
+  /* 분필 조각들 */
+  .chalk-stick {
+    height: 18px;
+    border-radius: 4px 4px 2px 2px;
+    box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
+  }
+  .chalk-peach  { width: 75px; background: #FFB38A; }
+  .chalk-blue   { width: 55px; background: #A2D6E6; }
+  .chalk-yellow { width: 85px; background: #FDE887; }
+  .chalk-white  { width: 60px; background: #F0F2F5; }
+
+  /* ========================================================
+     상단 헤더 영역 (손그림 번호, 별 낙서, 볼드 타이틀, 점선 구분선)
+     ======================================================== */
+  .header-section {
+    position: relative;
+    padding-top: 110px;
+    padding-left: 55px;
+    padding-right: 55px;
+    text-align: center;
+    z-index: 5;
+  }
+
+  /* 손그림 번호 타원 & 별 낙서 */
+  .page-doodle-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .doodle-ellipse {
+    width: 64px;
+    height: 42px;
+    border: 2.5px solid #A2D6E6;
+    border-radius: 50% 50% 46% 54% / 55% 48% 52% 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: #F0F4F8;
+    letter-spacing: 0.5px;
+    transform: rotate(-3deg);
+  }
+  .star-left {
+    position: absolute;
+    left: -32px;
+    top: -2px;
+    font-size: 20px;
+    color: #A2D6E6;
+    transform: rotate(-15deg);
+  }
+  .star-right {
+    position: absolute;
+    right: -36px;
+    top: 8px;
+    font-size: 22px;
+    color: #FDE887;
+    transform: rotate(20deg);
+  }
+
+  /* 메인 볼드 타이틀 (장평 3% 축소: scaleX(0.97)) */
+  .main-title-wrap {
+    margin-top: 10px;
+    margin-bottom: 16px;
+  }
+  .chalk-main-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 64px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+    line-height: 1.22;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.45);
+    display: inline-block;
+    position: relative;
+    padding-bottom: 12px;
+    transform: scaleX(0.97);
+    transform-origin: center;
+  }
+  .chalk-main-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 6%;
+    width: 88%;
+    height: 4px;
+    background: {{ doodle_colors.underline if doodle_colors else 'rgba(255, 255, 255, 0.75)' }};
+    border-radius: 3px;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+  }
+
+  /* 분필 점선 구분선 */
+  .chalk-dashed-divider {
+    width: 100%;
+    height: 3px;
+    border-bottom: 3px dashed rgba(255, 255, 255, 0.38);
+    margin-bottom: 18px;
+  }
+
+  /* ========================================================
+     본문 컨텐츠 영역 (레이아웃 분기)
+     ======================================================== */
+  .body-content-area {
+    position: relative;
+    padding: 10px 55px 0 55px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    z-index: 5;
+  }
+
+  /* --------------------------------------------------------
+     레이아웃 1: 핵심 요약 / 브리핑형 (Summary / Intro - 레퍼런스 1번)
+     -------------------------------------------------------- */
+  .layout-summary-wrap {
+    text-align: center;
+    padding: 20px 20px 60px;
+  }
+  .summary-icon-box {
+    margin-bottom: 24px;
+  }
+  .chalk-speech-bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 76px;
+    height: 60px;
+    background: #FDE887;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .chalk-speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 28px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #FDE887 transparent;
+    display: block;
+    width: 0;
+  }
+  .chalk-speech-dots {
+    font-size: 26px;
+    font-weight: 900;
+    color: #1E3529;
+    letter-spacing: 2px;
+  }
+  .summary-sub-heading {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 44px;
+    font-weight: 700;
+    color: #FDE887;
+    margin-bottom: 38px;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 3px rgba(253, 232, 135, 0.4);
+    transform: scaleX(0.97);
+    transform-origin: center;
+    display: inline-block;
+  }
+  .summary-text-box {
+    font-size: 32px;
+    line-height: 1.7;
+    font-weight: 500;
+    color: #E2E8F0;
+    max-width: 780px;
+    margin: 0 auto;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  /* --------------------------------------------------------
+     레이아웃 2: 3단 세로 카드 박스형 (Cards 3 - 레퍼런스 2번)
+     -------------------------------------------------------- */
+  .layout-cards3-wrap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: stretch;
+    padding-bottom: 40px;
+  }
+  .chalk-card-col {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 26px;
+    padding: 36px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .border-peach  { border: 3.5px solid #FFB38A; }
+  .border-blue   { border: 3.5px solid #A2D6E6; }
+  .border-yellow { border: 3.5px solid #FDE887; }
+  .border-mint   { border: 3.5px solid #A8E6CF; }
+
+  .card-col-icon {
+    font-size: 54px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+  }
+  .card-col-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: center;
+    display: inline-block;
+  }
+  .text-peach  { color: #FFB38A; text-shadow: 0 0 2px rgba(255,179,138,0.4); }
+  .text-blue   { color: #A2D6E6; text-shadow: 0 0 2px rgba(162,214,230,0.4); }
+  .text-yellow { color: #FDE887; text-shadow: 0 0 2px rgba(253,232,135,0.4); }
+  .text-mint   { color: #A8E6CF; text-shadow: 0 0 2px rgba(168,230,207,0.4); }
+
+  .card-col-divider {
+    width: 75%;
+    border-bottom: 2px dashed rgba(255, 255, 255, 0.35);
+    margin-bottom: 24px;
+  }
+  .card-col-desc {
+    font-size: 26px;
+    line-height: 1.55;
+    font-weight: 500;
+    color: #D1D5DB;
+  }
+
+  /* --------------------------------------------------------
+     레이아웃 3: 2단 분할 / 대조형 (Comparison / 2 Rows - 레퍼런스 3번 응용)
+     -------------------------------------------------------- */
+  .layout-compare-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    padding-bottom: 40px;
+  }
+  .compare-row-box {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 24px;
+    padding: 32px 36px;
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  .compare-row-box.box-orange { border: 3px solid #FF9248; }
+  .compare-row-box.box-blue   { border: 3px solid #A2D6E6; }
+  .compare-tag {
+    font-size: 28px;
+    font-weight: 800;
+    padding: 10px 22px;
+    border-radius: 14px;
+    flex-shrink: 0;
+  }
+  .tag-orange { background: #FF9248; color: #162C22; }
+  .tag-blue   { background: #A2D6E6; color: #162C22; }
+  .compare-info {
+    flex: 1;
+  }
+  .compare-title {
+    font-size: 34px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: #FFFFFF;
+  }
+  .compare-desc {
+    font-size: 26px;
+    line-height: 1.5;
+    color: #D1D5DB;
+    font-weight: 500;
+  }
+
+  /* --------------------------------------------------------
+     레이아웃 4: 체크리스트 / 그룹 목록형 (Checklist - 레퍼런스 4번)
+     -------------------------------------------------------- */
+  .layout-checklist-wrap {
+    padding: 0 20px 20px;
+  }
+  .checklist-main-sub {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 38px;
+    font-weight: 700;
+    color: #FFB38A;
+    text-align: center;
+    margin-bottom: 34px;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: center;
+    display: inline-block;
+  }
+  .checklist-group {
+    margin-bottom: 10px;
+  }
+  .check-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-left: 10px;
+  }
+  .check-item-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .check-item-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .check-circle-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    color: #17261E;
+    flex-shrink: 0;
+  }
+  .circle-pink   { background: #FFAAA6; }
+  .circle-yellow { background: #FDE887; }
+  .check-item-label {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+  .check-item-detail {
+    font-size: 24px;
+    font-weight: 500;
+    color: #D5DEE7;
+    line-height: 1.5;
+    padding-left: 40px;
+  }
+
+  /* --------------------------------------------------------
+     레이아웃 5: 빅 넘버 / 핵심 통계형 (Hero Stat)
+     -------------------------------------------------------- */
+  .layout-stat-wrap {
+    text-align: center;
+    padding: 10px 20px 50px;
+  }
+  .stat-giant-num {
+    font-size: 108px;
+    font-weight: 900;
+    color: #FF9248;
+    letter-spacing: -2px;
+    text-shadow: 0 0 10px rgba(255, 146, 72, 0.45);
+    margin-bottom: 10px;
+  }
+  .stat-giant-unit {
+    font-size: 46px;
+    font-weight: 800;
+    color: #FDE887;
+    margin-left: 8px;
+  }
+  .stat-lead-label {
+    font-size: 38px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 30px;
+  }
+  .stat-analysis-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 2.5px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 24px;
+    padding: 28px 34px;
+    text-align: left;
+    font-size: 28px;
+    line-height: 1.6;
+    color: #D1D5DB;
+  }
+
+  /* --------------------------------------------------------
+     레이아웃 6: 결론 / 학원 솔루션형 (Conclusion)
+     -------------------------------------------------------- */
+  .layout-conclusion-wrap {
+    padding: 10px 20px 30px;
+    text-align: center;
+  }
+  .conclusion-badge {
+    display: inline-block;
+    background: #FF7A29;
+    color: #FFFFFF;
+    font-size: 26px;
+    font-weight: 800;
+    padding: 8px 24px;
+    border-radius: 16px;
+    margin-bottom: 22px;
+  }
+  .conclusion-main-msg {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: #FDE887;
+    line-height: 1.35;
+    margin-bottom: 30px;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.97);
+    transform-origin: center;
+    display: inline-block;
+  }
+  .conclusion-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 3px solid #A2D6E6;
+    border-radius: 26px;
+    padding: 28px 28px;
+    text-align: left;
+    margin-bottom: 24px;
+  }
+  .conclusion-bullet {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .conclusion-bullet:last-child {
+    margin-bottom: 0;
+  }
+  .conclusion-bullet-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .conclusion-bullet-label {
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .conclusion-bullet-desc {
+    color: #D1D5DB;
+    font-size: 24px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  .conclusion-callout {
+    font-size: 27px;
+    font-weight: 800;
+    color: #FFB38A;
+    margin-top: 22px;
+    letter-spacing: -0.3px;
+    text-shadow: 0 0 3px rgba(255, 179, 138, 0.4);
+  }
+
+  /* ========================================================
+     신규 레이아웃 1: Before & After 2열 대조형 (레퍼런스 06번)
+     ======================================================== */
+  .layout-before-after-col-wrap {
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .ba-col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+  .ba-col-box {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 26px;
+    padding: 26px 20px 30px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .ba-pill-tag {
+    font-size: 21px;
+    font-weight: 800;
+    padding: 6px 18px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+  .tag-peach { background: #FFB38A; color: #162C22; }
+  .tag-blue  { background: #A2D6E6; color: #162C22; }
+  .ba-col-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+    transform: scaleX(0.97);
+    transform-origin: center;
+  }
+  .ba-bullet-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    padding: 0 10px;
+  }
+  .ba-bullet-item {
+    font-size: 23px;
+    color: #D5DEE7;
+    line-height: 1.45;
+    font-weight: 500;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .ba-dot {
+    color: #A2D6E6;
+    font-size: 24px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .ba-col-box.border-peach .ba-dot {
+    color: #FFB38A;
+  }
+  .ba-highlight-box {
+    border: 2.5px dashed #FDE887;
+    border-radius: 20px;
+    padding: 18px 24px;
+    margin-top: 24px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.22);
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #FDE887;
+    transform: scaleX(0.97);
+    transform-origin: center;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 3px rgba(253, 232, 135, 0.4);
+  }
+
+  /* ========================================================
+     신규 레이아웃 2: 가로형 3단 지표/수치 카드 (레퍼런스 03번)
+     ======================================================== */
+  .layout-stat-rows-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 10px;
+  }
+  .stat-row-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 24px;
+    padding: 24px 34px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+  .stat-row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat-row-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+    letter-spacing: -0.02em;
+  }
+  .stat-row-desc {
+    font-size: 23px;
+    color: #C5D0DC;
+    font-weight: 500;
+  }
+  .stat-row-right {
+    flex-shrink: 0;
+  }
+  .stat-row-number {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 68px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -1px;
+    transform: scaleX(0.97);
+    transform-origin: right center;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  }
+
+  /* ========================================================
+     신규 레이아웃 3: 4단 2x2 바둑판 그리드형 (레퍼런스 07번)
+     ======================================================== */
+  .layout-grid4-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 0 10px;
+  }
+  .grid4-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 22px;
+    padding: 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+  .grid4-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .grid4-num {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+  }
+  .grid4-title {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #FFFFFF;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+    letter-spacing: -0.02em;
+  }
+  .grid4-desc {
+    font-size: 23px;
+    color: #D1D5DB;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  /* ========================================================
+     신규 레이아웃 4: 후기 / 인용구 / 평점형 (레퍼런스 09번)
+     ======================================================== */
+  .layout-review-wrap {
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .review-card-box {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 3px solid #A2D6E6;
+    border-radius: 30px;
+    padding: 42px 36px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  .review-stars {
+    font-size: 34px;
+    color: #FDE887;
+    margin-bottom: 22px;
+    letter-spacing: 6px;
+    text-shadow: 0 0 6px rgba(253, 232, 135, 0.5);
+  }
+  .review-quote-text {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.6;
+    margin-bottom: 26px;
+    transform: scaleX(0.97);
+    transform-origin: center;
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+    letter-spacing: -0.02em;
+    word-break: keep-all;
+  }
+  .review-divider {
+    width: 120px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.5);
+    margin: 0 auto 22px;
+    border-radius: 2px;
+  }
+  .review-author {
+    font-size: 26px;
+    font-weight: 800;
+    color: #A2D6E6;
+    margin-bottom: 6px;
+  }
+  .review-author-detail {
+    font-size: 22px;
+    color: #C5D0DC;
+    font-weight: 500;
+  }
+
+  /* ========================================================
+     신규 레이아웃 5: 자주 묻는 질문 FAQ형 (레퍼런스 11번)
+     ======================================================== */
+  .layout-faq-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 0 10px;
+  }
+  .faq-card-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 2.5px solid #4E7D6A;
+    border-radius: 20px;
+    padding: 22px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  }
+  .faq-question {
+    font-family: 'SBAggroB', 'Pretendard', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    transform: scaleX(0.97);
+    transform-origin: left center;
+    letter-spacing: -0.02em;
+  }
+  .faq-q-orange { color: #FF9248; text-shadow: 0 0 2px rgba(255, 146, 72, 0.4); }
+  .faq-q-yellow { color: #FDE887; text-shadow: 0 0 2px rgba(253, 232, 135, 0.4); }
+  .faq-answer {
+    font-size: 23px;
+    color: #E2E8F0;
+    line-height: 1.5;
+    font-weight: 500;
+    padding-left: 2px;
+  }
+
+  /* 하단 인사이트 풋터 한 줄 */
+  .chalk-footer-insight {
+    position: absolute;
+    bottom: 68px;
+    left: 70px;
+    right: 70px;
+    background: rgba(0, 0, 0, 0.28);
+    border-radius: 14px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 23px;
+    color: #FEE440;
+    font-weight: 600;
+    z-index: 8;
+  }
+</style>
+</head>
+<body>
+
+<div class="chalkboard-frame">
+  <!-- 은은한 분필 가루 질감 -->
+  <div class="chalk-dust-overlay"></div>
+
+  <!-- 상단 공통 헤더 영역 -->
+  <div class="header-section">
+    <div class="page-doodle-container">
+      <span class="star-left" style="color: {{ doodle_colors.star_left if doodle_colors else '#A2D6E6' }};">⭐</span>
+      <div class="doodle-ellipse" style="border-color: {{ doodle_colors.ellipse if doodle_colors else '#A2D6E6' }};">
+        {% set pnum = card.card_number | int %}
+        {{ '%02d' % pnum }}
+      </div>
+      <span class="star-right" style="color: {{ doodle_colors.star_right if doodle_colors else '#FDE887' }};">⭐</span>
+    </div>
+
+    <div class="main-title-wrap">
+      <div class="chalk-main-title">{{ card.title }}</div>
+    </div>
+
+    <div class="chalk-dashed-divider"></div>
+  </div>
+
+  <!-- 본문 컨텐츠 영역 (레이아웃 분기) -->
+  <div class="body-content-area">
+
+    {# CASE 1: Before & After 2열 세로 대조형 (레퍼런스 06번: before_after / comparison_col) #}
+    {% if card.layout_type in ['before_after', 'comparison_col'] %}
+      <div class="layout-before-after-col-wrap">
+        <div class="ba-col-grid">
+          {% set ba_items = card['items'][:2] %}
+          {% set col_borders = ['border-peach', 'border-blue'] %}
+          {% set tag_classes = ['tag-peach', 'tag-blue'] %}
+          {% for item in ba_items %}
+          {% set idx = loop.index0 %}
+          <div class="ba-col-box {{ col_borders[idx % 2] }}">
+            <div class="ba-pill-tag {{ tag_classes[idx % 2] }}">
+              {{ item.label or ('BEFORE • 참가 전' if idx == 0 else 'AFTER • 참가 후') }}
+            </div>
+            <div class="ba-col-title">{{ item.value or item.title or '' }}</div>
+            <div class="ba-bullet-list">
+              {% if item.bullets %}
+                {% for b in item.bullets %}
+                  <div class="ba-bullet-item"><span class="ba-dot">•</span> <span>{{ b }}</span></div>
+                {% endfor %}
+              {% elif item.detail %}
+                {% for line in item.detail.split('\n') if line.strip() %}
+                  <div class="ba-bullet-item"><span class="ba-dot">•</span> <span>{{ line.lstrip('•- ') }}</span></div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% if card.subtitle or card.callout %}
+        <div class="ba-highlight-box">
+          {{ card.subtitle or card.callout }}
+        </div>
+        {% endif %}
+      </div>
+
+    {# CASE 2: 가로형 3단 지표/수치 카드 (레퍼런스 03번: stat_rows / metrics_3) #}
+    {% elif card.layout_type in ['stat_rows', 'metrics_3'] %}
+      <div class="layout-stat-rows-wrap">
+        {% set row_borders = ['border-peach', 'border-blue', 'border-yellow'] %}
+        {% set title_colors = ['text-peach', 'text-blue', 'text-yellow'] %}
+        {% for item in card['items'][:3] %}
+        {% set idx = loop.index0 %}
+        <div class="stat-row-card {{ row_borders[idx % 3] }}">
+          <div class="stat-row-left">
+            <div class="stat-row-title {{ title_colors[idx % 3] }}">{{ item.label }}</div>
+            {% if item.detail or item.sub %}
+            <div class="stat-row-desc">{{ item.detail or item.sub }}</div>
+            {% endif %}
+          </div>
+          <div class="stat-row-right">
+            <div class="stat-row-number">{{ item.value or '' }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {# CASE 3: 4단 2x2 바둑판 그리드형 (레퍼런스 07번: grid_4 / step_4) #}
+    {% elif card.layout_type in ['grid_4', 'step_4'] or (card.layout_type in ['grid', 'step'] and card.get('items') and card.get('items') | length >= 4) %}
+      <div class="layout-grid4-wrap">
+        {% set grid_borders = ['border-peach', 'border-blue', 'border-yellow', 'border-mint'] %}
+        {% set num_colors = ['text-peach', 'text-blue', 'text-yellow', 'text-mint'] %}
+        {% for item in card['items'][:4] %}
+        {% set idx = loop.index0 %}
+        <div class="grid4-card {{ grid_borders[idx % 4] }}">
+          <div class="grid4-card-header">
+            <span class="grid4-num {{ num_colors[idx % 4] }}">0{{ idx + 1 }}</span>
+            <span class="grid4-title">{{ item.label }}</span>
+          </div>
+          <div class="grid4-desc">{{ item.detail or item.value or '' }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {# CASE 4: 후기 / 인용구 / 평점형 (레퍼런스 09번: review / quote / testimonial) #}
+    {% elif card.layout_type in ['review', 'quote', 'testimonial'] %}
+      <div class="layout-review-wrap">
+        <div class="review-card-box">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-quote-text">
+            {% set q_text = card.subtitle or (card['items'][0].detail if card['items'] else '') %}
+            {% if not q_text.startswith("'") and not q_text.startswith('"') and not q_text.startswith("“") %}
+              “{{ q_text }}”
+            {% else %}
+              {{ q_text }}
+            {% endif %}
+          </div>
+          <div class="review-divider"></div>
+          {% if card['items'] %}
+            {% set author_item = card['items'][0] %}
+            <div class="review-author">{{ author_item.label or card.author or '수강생 생생 후기' }}</div>
+            {% if author_item.value or author_item.sub %}
+            <div class="review-author-detail">{{ author_item.value or author_item.sub }}</div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+    {# CASE 5: 자주 묻는 질문 FAQ형 (레퍼런스 11번: faq / qna / chat) #}
+    {% elif card.layout_type in ['faq', 'qna', 'chat'] %}
+      <div class="layout-faq-wrap">
+        {% for item in card['items'][:3] %}
+        {% set is_alt = loop.index == 2 %}
+        <div class="faq-card-box">
+          <div class="faq-question {% if is_alt %}faq-q-yellow{% else %}faq-q-orange{% endif %}">
+            Q. {{ item.label.lstrip('Q. ') }}
+          </div>
+          <div class="faq-answer">
+            A. {{ (item.detail or item.value or '').lstrip('A. ') }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {# CASE 6: 3단 카드 박스형 (grid / cards_3 / step) #}
+    {% elif card.layout_type in ['cards_3', 'step'] or (card.get('items') and card.get('items') | length == 3 and card.layout_type not in ['summary', 'conclusion', 'checklist', 'list', 'stat_rows', 'faq']) %}
+      <div class="layout-cards3-wrap">
+        {% set border_classes = ['border-peach', 'border-blue', 'border-yellow'] %}
+        {% set text_classes = ['text-peach', 'text-blue', 'text-yellow'] %}
+        {% set icons = ['🪪', '💬', '💡'] %}
+        {% for item in card['items'][:3] %}
+        {% set idx = loop.index0 %}
+        <div class="chalk-card-col {{ border_classes[idx % 3] }}">
+          <div class="card-col-icon">{{ icons[idx % 3] }}</div>
+          <div class="card-col-title {{ text_classes[idx % 3] }}">{{ item.label }}</div>
+          <div class="card-col-divider"></div>
+          <div class="card-col-desc">{{ item.detail or item.value or '' }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {# CASE 7: 2단 분할/대조형 (comparison / before_after_row) #}
+    {% elif card.layout_type in ['comparison', '2rows'] or (card.get('items') and card.get('items') | length == 2 and card.layout_type not in ['summary', 'conclusion', 'checklist', 'list', 'stat_rows', 'faq', 'before_after']) %}
+      <div class="layout-compare-wrap">
+        {% set box_classes = ['box-orange', 'box-blue'] %}
+        {% set tag_classes = ['tag-orange', 'tag-blue'] %}
+        {% for item in card['items'][:2] %}
+        {% set idx = loop.index0 %}
+        <div class="compare-row-box {{ box_classes[idx % 2] }}">
+          <div class="compare-tag {{ tag_classes[idx % 2] }}">{{ item.label }}</div>
+          <div class="compare-info">
+            {% if item.value %}<div class="compare-title">{{ item.value }}</div>{% endif %}
+            <div class="compare-desc">{{ item.detail or '' }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {# CASE 8: 체크리스트 / 그룹 리스트형 (checklist / list / factcheck) #}
+    {% elif card.layout_type in ['checklist', 'list', 'factcheck'] %}
+      <div class="layout-checklist-wrap">
+        {% if card.subtitle %}
+        <div class="checklist-main-sub">{{ card.subtitle }}</div>
+        {% endif %}
+        
+        <div class="checklist-group">
+          <div class="check-items-list">
+            {% for item in card['items'] %}
+            {% set is_pink = loop.index % 2 == 1 %}
+            <div class="check-item-box">
+              <div class="check-item-header">
+                <span class="check-circle-icon {% if is_pink %}circle-pink{% else %}circle-yellow{% endif %}">✓</span>
+                <span class="check-item-label" style="color: {% if is_pink %}#FFAAA6{% else %}#FDE887{% endif %};">
+                  {{ item.label }}
+                </span>
+              </div>
+              {% if item.detail or item.value %}
+              <div class="check-item-detail">
+                {{ item.detail or item.value }}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    {# CASE 9: 대형 통계 / 수치 강조형 (stat / hero_stat) #}
+    {% elif card.layout_type in ['stat', 'hero_stat'] %}
+      <div class="layout-stat-wrap">
+        {% set hero = card['items'][0] if card['items'] else none %}
+        {% if hero %}
+        <div class="stat-giant-num">
+          {{ hero.value or '98%' }}<span class="stat-giant-unit">{{ hero.sub or '' }}</span>
+        </div>
+        <div class="stat-lead-label">{{ hero.label }}</div>
+        {% if hero.detail or card.subtitle %}
+        <div class="stat-analysis-card">
+          💡 {{ hero.detail or card.subtitle }}
+        </div>
+        {% endif %}
+        {% endif %}
+      </div>
+
+    {# CASE 10: 결론 / 마무리형 (conclusion) #}
+    {% elif card.layout_type == 'conclusion' %}
+      <div class="layout-conclusion-wrap">
+        <div class="conclusion-badge">오늘도국어학원 총평 & 솔루션</div>
+        <div class="conclusion-main-msg">{{ card.subtitle or '철저한 분석과 맞춤 대비가 입시 성공을 만듭니다' }}</div>
+        <div class="conclusion-box">
+          {% if card.get('items') %}
+            {% for item in card.get('items') %}
+            <div class="conclusion-bullet">
+              <span style="color: #A2D6E6; font-size: 26px; flex-shrink: 0; margin-top: 2px;">⚡</span>
+              <div class="conclusion-bullet-content">
+                <div class="conclusion-bullet-label">{{ item.label if item.label else item }}</div>
+                {% if item.detail or item.value %}
+                <div class="conclusion-bullet-desc">{{ item.detail or item.value }}</div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% elif card.desc %}
+            <div style="font-size: 26px; line-height: 1.6; color: #FFFFFF; font-weight: 500;">
+              {{ card.desc | replace('\n', '<br>') | safe }}
+            </div>
+          {% endif %}
+        </div>
+        <div class="conclusion-callout">📱 오늘도국어학원 상담 및 입학 문의 : 010-2710-5195</div>
+      </div>
+
+    {# CASE 11 (기본값): 핵심 요약 / 브리핑형 (summary / intro / 기타) #}
+    {% else %}
+      <div class="layout-summary-wrap">
+        <div class="summary-icon-box">
+          <div class="chalk-speech-bubble">
+            <span class="chalk-speech-dots">...</span>
+          </div>
+        </div>
+        <div class="summary-sub-heading">{{ card.subtitle or '이번 이슈의 핵심 포인트' }}</div>
+        <div class="summary-text-box">
+          {% if card.get('items') and card.get('items')[0].detail %}
+            {{ card.get('items')[0].detail }}
+          {% elif card.get('items') and card.get('items')[0].label %}
+            {{ card.get('items')[0].label }}
+          {% elif card.desc %}
+            {{ card.desc | replace('\n', '<br>') | safe }}
+          {% else %}
+            이번 교육 뉴스에 대한 핵심 분석 내용입니다. 수험생과 학부모가 반드시 체크해야 할 주요 변화 요소를 확인하세요.
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+
+  <!-- 하단 팁 / 인사이트 풋터 (있을 경우) -->
+  {% if card.footer_insight %}
+  <div class="chalk-footer-insight">
+    <span>💡</span>
+    <span>{{ card.footer_insight }}</span>
+  </div>
+  {% endif %}
+
+  <!-- 하단 나무 분필 받침대 -->
+  <div class="wood-tray">
+    <div class="wood-tray-groove"></div>
+    <div class="chalk-holder-left">
+      {% if chalk_tray and chalk_tray.left %}
+        {% for ch in chalk_tray.left %}
+          <div class="chalk-stick" style="width: {{ ch.width }}px; height: {{ ch.height }}px; background-color: {{ ch.color }}; border-radius: {{ ch.radius }};"></div>
+        {% endfor %}
+      {% else %}
+        <div class="chalk-stick chalk-peach"></div>
+        <div class="chalk-stick chalk-blue"></div>
+      {% endif %}
+    </div>
+    <div class="chalk-holder-right">
+      {% if chalk_tray and chalk_tray.right %}
+        {% for ch in chalk_tray.right %}
+          <div class="chalk-stick" style="width: {{ ch.width }}px; height: {{ ch.height }}px; background-color: {{ ch.color }}; border-radius: {{ ch.radius }};"></div>
+        {% endfor %}
+      {% else %}
+        <div class="chalk-stick chalk-yellow"></div>
+        <div class="chalk-stick chalk-white"></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

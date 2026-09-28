@@ -1446,8 +1446,8 @@
             <div class="flow-desc">{{ cause.detail }}</div>
           </div>
           <div class="flow-arrow-down">▼</div>
-          {% if card['items']|length > 1 %}
-          {% set effect = card['items'][1] %}
+          {% if card.get('items') and card.get('items')|length > 1 %}
+          {% set effect = card.get('items')[1] %}
           <div class="flow-box blue">
             <div class="flow-header">
               <span class="flow-title blue">{{ effect.label }}</span>
@@ -1605,8 +1605,8 @@
             </div>
           </div>
 
-          {% if card['items']|length > 1 %}
-          {% set after_item = card['items'][1] %}
+          {% if card.get('items') and card.get('items')|length > 1 %}
+          {% set after_item = card.get('items')[1] %}
           <div class="ba-box after">
             <div class="ba-title">{{ after_item.label or '애프터 - 합격 패턴' }}</div>
             <div class="ba-big-icon-wrap">
@@ -1682,7 +1682,7 @@
               <span class="exam-header-sub">{{ card.subtitle or '[실전 킬러 지문 핵심 문맥]' }}</span>
             </div>
             
-            {% set passage_item = card['items'][0] if card['items']|length > 0 else none %}
+            {% set passage_item = card.get('items')[0] if (card.get('items') and card.get('items')|length > 0) else none %}
             {% if passage_item %}
             <div class="exam-paper-body">
               <div class="exam-passage-text">
@@ -1708,7 +1708,8 @@
               <span class="exam-solution-sub">오늘도국어 시크릿 솔루션</span>
             </div>
             <div class="exam-solution-bullets">
-              {% for sol in card['items'][1:] %}
+              {% if card.get('items') %}
+              {% for sol in card.get('items')[1:] %}
               <div class="exam-solution-item">
                 <span class="exam-check-icon">✔</span>
                 <div class="exam-solution-content">
@@ -1716,6 +1717,7 @@
                 </div>
               </div>
               {% endfor %}
+              {% endif %}
             </div>
           </div>
         </div>
@@ -1723,12 +1725,19 @@
       {# CASE 14: 결론 및 총평형 #}
       {% elif card.layout_type == 'conclusion' %}
         <div class="conclusion-box">
-          {% for item in card['items'] %}
+          {% if card.get('items') %}
+          {% for item in card.get('items') %}
           <div class="list-card {{ item.color or 'orange' }}" style="margin-bottom: 12px;">
             <div class="list-head {% if item.color == 'blue' %}text-blue{% else %}text-orange{% endif %}">{{ item.label }}</div>
             <div class="list-body">{{ item.detail }}</div>
           </div>
           {% endfor %}
+          {% elif card.desc %}
+          <div class="list-card orange" style="margin-bottom: 12px;">
+            <div class="list-head text-orange">{{ card.subtitle or '핵심 정리' }}</div>
+            <div class="list-body">{{ card.desc }}</div>
+          </div>
+          {% endif %}
           <div class="cta-banner">
             <span>📌 나중에 다시 보려면 게시물 저장 & 공유</span>
             <span>💾 SAVE</span>
@@ -1737,12 +1746,19 @@
 
       {# CASE 11: 기본 분석/불릿 리스트형 #}
       {% else %}
-        {% for item in card['items'] %}
+        {% if card.get('items') %}
+        {% for item in card.get('items') %}
         <div class="list-card {{ item.color or 'orange' }}">
           <div class="list-head {% if item.color == 'blue' %}text-blue{% else %}text-orange{% endif %}">{{ item.label }}</div>
           <div class="list-body">{{ item.detail }}</div>
         </div>
         {% endfor %}
+        {% elif card.desc %}
+        <div class="list-card orange">
+          <div class="list-head text-orange">{{ card.subtitle or '핵심 분석' }}</div>
+          <div class="list-body">{{ card.desc }}</div>
+        </div>
+        {% endif %}
       {% endif %}
     </div>
 
