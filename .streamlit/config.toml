@@ -2,9 +2,7 @@
 gatherUsageStats = false
 
 [server]
-headless = false
-enableCORS = false
-enableXsrfProtection = false
+headless = true
 
 [theme]
 primaryColor = "#2b6cb0"
